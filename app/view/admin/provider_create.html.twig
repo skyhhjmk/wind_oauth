@@ -1,0 +1,146 @@
+{% extends "layout/admin.html.twig" %}
+
+{% block page_title %}添加OAuth提供商{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-sm p-6">
+    <form id="providerForm" class="space-y-6">
+        <div class="grid grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">提供商名称 *</label>
+                <input type="text" name="name" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                       placeholder="例如: GitHub">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">提供商标识(Slug) *</label>
+                <input type="text" name="slug" required pattern="[a-z0-9\-]+"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                       placeholder="例如: github (仅小写字母、数字、连字符)">
+                <p class="mt-1 text-xs text-gray-500">用于URL,仅支持小写字母、数字和连字符</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Client ID *</label>
+                <input type="text" name="client_id" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Client Secret *</label>
+                <input type="password" name="client_secret" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">授权端点URL *</label>
+            <input type="url" name="authorize_url" required
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                   placeholder="https://provider.com/oauth/authorize">
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">令牌端点URL *</label>
+            <input type="url" name="token_url" required
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                   placeholder="https://provider.com/oauth/token">
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">用户信息端点URL *</label>
+            <input type="url" name="userinfo_url" required
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                   placeholder="https://api.provider.com/user">
+        </div>
+
+        <div class="grid grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">权限范围(Scope)</label>
+                <input type="text" name="scope"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                       placeholder="例如: user:email profile">
+                <p class="mt-1 text-xs text-gray-500">多个权限用空格分隔</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">图标CSS类</label>
+                <input type="text" name="icon_class"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                       placeholder="例如: fa fa-github">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">按钮颜色</label>
+                <input type="color" name="button_color" value="#4F46E5"
+                       class="w-full h-10 px-1 py-1 border border-gray-300 rounded-md">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">排序</label>
+                <input type="number" name="sort_order" value="0" min="0"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">状态</label>
+                <select name="status"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="1">启用</option>
+                    <option value="0">禁用</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="error-message" class="hidden text-red-600 text-sm"></div>
+
+        <div class="flex justify-end space-x-4">
+            <a href="/admin/providers" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                取消
+            </a>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                保存
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('providerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData);
+    
+    const errorMsg = document.getElementById('error-message');
+    errorMsg.classList.add('hidden');
+    
+    try {
+        const response = await fetch('/admin/providers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            window.location.href = '/admin/providers';
+        } else {
+            errorMsg.textContent = result.error || '保存失败';
+            errorMsg.classList.remove('hidden');
+        }
+    } catch (error) {
+        errorMsg.textContent = '保存失败，请重试';
+        errorMsg.classList.remove('hidden');
+    }
+});
+</script>
+{% endblock %}

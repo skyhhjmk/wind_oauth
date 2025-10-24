@@ -85,6 +85,51 @@ CREATE TABLE IF NOT EXISTS oauth_scopes (
 
 CREATE INDEX IF NOT EXISTS idx_oauth_scopes_scope ON oauth_scopes(scope);
 
+-- OAuth第三方提供商表
+CREATE TABLE IF NOT EXISTS oauth_providers (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(100) NOT NULL UNIQUE,
+    client_id VARCHAR(255) NOT NULL,
+    client_secret VARCHAR(255) NOT NULL,
+    authorize_url VARCHAR(500) NOT NULL,
+    token_url VARCHAR(500) NOT NULL,
+    userinfo_url VARCHAR(500) NOT NULL,
+    scope VARCHAR(500),
+    icon_class VARCHAR(100),
+    button_color VARCHAR(50) DEFAULT '#4F46E5',
+    status SMALLINT NOT NULL DEFAULT 1,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_oauth_providers_slug ON oauth_providers(slug);
+CREATE INDEX IF NOT EXISTS idx_oauth_providers_status ON oauth_providers(status);
+
+-- OAuth第三方账号绑定表
+CREATE TABLE IF NOT EXISTS oauth_user_bindings (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    provider_id BIGINT NOT NULL,
+    provider_user_id VARCHAR(255) NOT NULL,
+    provider_username VARCHAR(255),
+    provider_email VARCHAR(255),
+    provider_avatar VARCHAR(500),
+    access_token TEXT,
+    refresh_token TEXT,
+    token_expires_at TIMESTAMP,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (provider_id) REFERENCES oauth_providers(id) ON DELETE CASCADE,
+    UNIQUE (provider_id, provider_user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_oauth_user_bindings_user_id ON oauth_user_bindings(user_id);
+CREATE INDEX IF NOT EXISTS idx_oauth_user_bindings_provider_id ON oauth_user_bindings(provider_id);
+CREATE INDEX IF NOT EXISTS idx_oauth_user_bindings_provider_user_id ON oauth_user_bindings(provider_user_id);
+
 -- 插入默认权限范围
 INSERT INTO oauth_scopes (scope, description, is_default, created_at, updated_at) VALUES
 ('basic', '基本信息访问', 1, NOW(), NOW()),

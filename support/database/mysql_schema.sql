@@ -80,6 +80,49 @@ CREATE TABLE IF NOT EXISTS `oauth_scopes` (
     INDEX `idx_scope` (`scope`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- OAuth第三方提供商表
+CREATE TABLE IF NOT EXISTS `oauth_providers` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(255) NOT NULL COMMENT '提供商名称',
+    `slug` VARCHAR(100) NOT NULL UNIQUE COMMENT '提供商标识（URL友好）',
+    `client_id` VARCHAR(255) NOT NULL COMMENT '客户端ID',
+    `client_secret` VARCHAR(255) NOT NULL COMMENT '客户端密钥',
+    `authorize_url` VARCHAR(500) NOT NULL COMMENT '授权端点URL',
+    `token_url` VARCHAR(500) NOT NULL COMMENT '令牌端点URL',
+    `userinfo_url` VARCHAR(500) NOT NULL COMMENT '用户信息端点URL',
+    `scope` VARCHAR(500) NULL COMMENT '请求的权限范围',
+    `icon_class` VARCHAR(100) NULL COMMENT '图标CSS类',
+    `button_color` VARCHAR(50) DEFAULT '#4F46E5' COMMENT '按钮颜色',
+    `status` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '状态：1启用，0禁用',
+    `sort_order` INT NOT NULL DEFAULT 0 COMMENT '排序',
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL,
+    INDEX `idx_slug` (`slug`),
+    INDEX `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='第三方OAuth提供商配置表';
+
+-- OAuth第三方账号绑定表
+CREATE TABLE IF NOT EXISTS `oauth_user_bindings` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `user_id` BIGINT UNSIGNED NOT NULL COMMENT '本地用户ID',
+    `provider_id` BIGINT UNSIGNED NOT NULL COMMENT 'OAuth提供商ID',
+    `provider_user_id` VARCHAR(255) NOT NULL COMMENT '第三方用户ID',
+    `provider_username` VARCHAR(255) NULL COMMENT '第三方用户名',
+    `provider_email` VARCHAR(255) NULL COMMENT '第三方邮箱',
+    `provider_avatar` VARCHAR(500) NULL COMMENT '第三方头像',
+    `access_token` TEXT NULL COMMENT '访问令牌',
+    `refresh_token` TEXT NULL COMMENT '刷新令牌',
+    `token_expires_at` TIMESTAMP NULL COMMENT '令牌过期时间',
+    `created_at` TIMESTAMP NULL,
+    `updated_at` TIMESTAMP NULL,
+    INDEX `idx_user_id` (`user_id`),
+    INDEX `idx_provider_id` (`provider_id`),
+    INDEX `idx_provider_user_id` (`provider_user_id`),
+    UNIQUE KEY `unique_binding` (`provider_id`, `provider_user_id`),
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`provider_id`) REFERENCES `oauth_providers`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户OAuth账号绑定表';
+
 -- 插入默认权限范围
 INSERT INTO `oauth_scopes` (`scope`, `description`, `is_default`) VALUES
 ('basic', '基本信息访问', 1),

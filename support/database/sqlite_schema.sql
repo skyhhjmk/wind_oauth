@@ -85,6 +85,51 @@ CREATE TABLE IF NOT EXISTS oauth_scopes (
 
 CREATE INDEX IF NOT EXISTS idx_oauth_scopes_scope ON oauth_scopes(scope);
 
+-- OAuth第三方提供商表
+CREATE TABLE IF NOT EXISTS oauth_providers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    slug TEXT NOT NULL UNIQUE,
+    client_id TEXT NOT NULL,
+    client_secret TEXT NOT NULL,
+    authorize_url TEXT NOT NULL,
+    token_url TEXT NOT NULL,
+    userinfo_url TEXT NOT NULL,
+    scope TEXT,
+    icon_class TEXT,
+    button_color TEXT DEFAULT '#4F46E5',
+    status INTEGER NOT NULL DEFAULT 1,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT,
+    updated_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_oauth_providers_slug ON oauth_providers(slug);
+CREATE INDEX IF NOT EXISTS idx_oauth_providers_status ON oauth_providers(status);
+
+-- OAuth第三方账号绑定表
+CREATE TABLE IF NOT EXISTS oauth_user_bindings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    provider_id INTEGER NOT NULL,
+    provider_user_id TEXT NOT NULL,
+    provider_username TEXT,
+    provider_email TEXT,
+    provider_avatar TEXT,
+    access_token TEXT,
+    refresh_token TEXT,
+    token_expires_at TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (provider_id) REFERENCES oauth_providers(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_oauth_user_bindings_user_id ON oauth_user_bindings(user_id);
+CREATE INDEX IF NOT EXISTS idx_oauth_user_bindings_provider_id ON oauth_user_bindings(provider_id);
+CREATE INDEX IF NOT EXISTS idx_oauth_user_bindings_provider_user_id ON oauth_user_bindings(provider_user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_binding ON oauth_user_bindings(provider_id, provider_user_id);
+
 -- 插入默认权限范围
 INSERT OR IGNORE INTO oauth_scopes (scope, description, is_default, created_at, updated_at) VALUES
 ('basic', '基本信息访问', 1, datetime('now'), datetime('now')),

@@ -1,0 +1,125 @@
+{% extends "layout/admin.html.twig" %}
+
+{% block page_title %}OAuth提供商管理{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-sm">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+        <h3 class="text-lg font-semibold">第三方OAuth提供商</h3>
+        <a href="/admin/providers/create" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">
+            添加提供商
+        </a>
+    </div>
+
+    <div class="p-6">
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            名称
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            标识
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            授权端点
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            状态
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            排序
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            操作
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% if providers|length > 0 %}
+                        {% for provider in providers %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    {% if provider.icon_class %}
+                                    <i class="{{ provider.icon_class }} mr-2"></i>
+                                    {% endif %}
+                                    <span class="font-medium">{{ provider.name }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <code class="bg-gray-100 px-2 py-1 rounded">{{ provider.slug }}</code>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                                {{ provider.authorize_url }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if provider.status == 1 %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    启用
+                                </span>
+                                {% else %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    禁用
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ provider.sort_order }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="/admin/providers/edit?id={{ provider.id }}" 
+                                   class="text-indigo-600 hover:text-indigo-900 mr-3">编辑</a>
+                                <button onclick="deleteProvider({{ provider.id }})" 
+                                        class="text-red-600 hover:text-red-900">删除</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                                </svg>
+                                <p class="mt-2">暂无OAuth提供商</p>
+                                <a href="/admin/providers/create" class="mt-4 inline-block px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                                    添加第一个提供商
+                                </a>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+async function deleteProvider(id) {
+    if (!confirm('确定要删除此OAuth提供商吗？这将同时删除所有用户绑定。')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/admin/providers/delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({ id })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || '删除失败');
+        }
+    } catch (error) {
+        alert('删除失败');
+    }
+}
+</script>
+{% endblock %}

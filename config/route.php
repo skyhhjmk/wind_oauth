@@ -17,6 +17,7 @@ use app\controller\AuthController;
 use app\controller\OauthController;
 use app\controller\AdminController;
 use app\controller\InstallController;
+use app\controller\ThirdPartyOAuthController;
 
 // 安装路由
 Route::get('/install', [InstallController::class, 'index']);
@@ -41,6 +42,10 @@ Route::post('/oauth/token', [OauthController::class, 'token']);
 Route::post('/oauth/introspect', [OauthController::class, 'introspect']);
 Route::post('/oauth/revoke', [OauthController::class, 'revoke']);
 Route::get('/oauth/userinfo', [OauthController::class, 'userinfo']);
+
+// 第三方OAuth登录
+Route::get('/oauth/login/{provider}', [ThirdPartyOAuthController::class, 'login']);
+Route::get('/oauth/callback/{provider}', [ThirdPartyOAuthController::class, 'callback']);
 
 // 管理后台
 Route::get('/admin', [AdminController::class, 'index']);
@@ -69,3 +74,11 @@ Route::get('/admin/users/{id}', [AdminController::class, 'getUser']);
 Route::post('/admin/users', [AdminController::class, 'storeUser']);
 Route::post('/admin/users/update', [AdminController::class, 'updateUser']);
 Route::post('/admin/users/delete', [AdminController::class, 'deleteUser']);
+
+// OAuth提供商管理
+Route::get('/admin/providers', [AdminController::class, 'providers']);
+Route::get('/admin/providers/create', [AdminController::class, 'createProvider']);
+Route::post('/admin/providers', [AdminController::class, 'storeProvider']);
+Route::get('/admin/providers/edit', [AdminController::class, 'editProvider']);
+Route::post('/admin/providers/update', [AdminController::class, 'updateProvider']);
+Route::post('/admin/providers/delete', [AdminController::class, 'deleteProvider']);

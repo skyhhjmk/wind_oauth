@@ -42,6 +42,31 @@
                     </button>
                 </div>
             </form>
+            {% if oauthProviders|length > 0 %}
+            <div class="mt-6">
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">或使用</span>
+                    </div>
+                </div>
+                <div class="mt-6 space-y-3">
+                    {% for provider in oauthProviders %}
+                    <a href="/oauth/login/{{ provider.slug }}" 
+                       class="w-full flex justify-center items-center py-2.5 px-4 border border-gray-300 rounded-md text-sm font-medium text-white hover:opacity-90 transition"
+                       style="background-color: {{ provider.button_color }}">
+                        {% if provider.icon_class %}
+                        <i class="{{ provider.icon_class }} mr-2"></i>
+                        {% endif %}
+                        使用 {{ provider.name }} 登录
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
             <div class="mt-4 text-center">
                 <p class="text-sm text-gray-600">
                     还没有账号？

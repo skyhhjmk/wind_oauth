@@ -2,6 +2,7 @@
 namespace app\controller;
 
 use app\model\User;
+use app\model\OAuthProvider;
 use support\Request;
 use support\Response;
 
@@ -37,7 +38,11 @@ class AuthController
         }
 
         file_put_contents(runtime_path() . '/debug.log', date('Y-m-d H:i:s') . ' [DEBUG] login() - Not logged in, showing login form' . "\n", FILE_APPEND);
-        return view('auth/login');
+        
+        // 获取启用的OAuth提供商
+        $oauthProviders = OAuthProvider::getActive();
+        
+        return view('auth/login', ['oauthProviders' => $oauthProviders]);
     }
 
     /**
