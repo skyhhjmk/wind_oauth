@@ -1,0 +1,145 @@
+{% extends "layout/admin.html.twig" %}
+
+{% block page_title %}编辑 OAuth 客户端{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow">
+    <!-- 头部 -->
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">编辑客户端</h3>
+    </div>
+
+    <!-- 表单 -->
+    <form id="editClientForm" class="p-6 space-y-6">
+        <input type="hidden" name="id" value="{{ client.id }}">
+        
+        <!-- Client ID (只读) -->
+        <div>
+            <label for="client_id" class="block text-sm font-medium text-gray-700 mb-2">Client ID</label>
+            <input type="text" id="client_id" value="{{ client.client_id }}" readonly
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600">
+        </div>
+
+        <!-- 客户端名称 -->
+        <div>
+            <label for="name" class="block text-sm font-medium text-gray-700 mb-2">客户端名称</label>
+            <input type="text" id="name" name="name" required value="{{ client.name }}"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                   placeholder="例如：我的应用">
+        </div>
+
+        <!-- 重定向 URI -->
+        <div>
+            <label for="redirect_uri" class="block text-sm font-medium text-gray-700 mb-2">重定向 URI</label>
+            <input type="url" id="redirect_uri" name="redirect_uri" required value="{{ client.redirect_uri }}"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                   placeholder="https://example.com/callback">
+            <p class="mt-1 text-sm text-gray-500">授权成功后的回调地址</p>
+        </div>
+
+        <!-- 授权类型 -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">授权类型</label>
+            <div class="space-y-2">
+                <label class="inline-flex items-center mr-4">
+                    <input type="checkbox" name="grant_types[]" value="authorization_code" 
+                           {% if 'authorization_code' in client.grant_types %}checked{% endif %}
+                           class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                    <span class="ml-2 text-sm text-gray-700">Authorization Code</span>
+                </label>
+                <label class="inline-flex items-center mr-4">
+                    <input type="checkbox" name="grant_types[]" value="refresh_token"
+                           {% if 'refresh_token' in client.grant_types %}checked{% endif %}
+                           class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                    <span class="ml-2 text-sm text-gray-700">Refresh Token</span>
+                </label>
+                <label class="inline-flex items-center mr-4">
+                    <input type="checkbox" name="grant_types[]" value="client_credentials"
+                           {% if 'client_credentials' in client.grant_types %}checked{% endif %}
+                           class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                    <span class="ml-2 text-sm text-gray-700">Client Credentials</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- 权限范围 -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">权限范围</label>
+            <div class="space-y-2">
+                {% for scope in scopes %}
+                <label class="flex items-start">
+                    <input type="checkbox" name="scope[]" value="{{ scope.scope }}"
+                           {% if scope.scope in client.scope %}checked{% endif %}
+                           class="mt-1 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                    <div class="ml-2">
+                        <span class="text-sm text-gray-700 font-medium">{{ scope.scope }}</span>
+                        <p class="text-xs text-gray-500">{{ scope.description }}</p>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 状态 -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">状态</label>
+            <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="1" {% if client.status == 1 %}selected{% endif %}>启用</option>
+                <option value="0" {% if client.status == 0 %}selected{% endif %}>禁用</option>
+            </select>
+        </div>
+
+        <!-- 按钮 -->
+        <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+            <a href="/admin/clients" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition">
+                取消
+            </a>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">
+                保存更改
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('editClientForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const data = {};
+    
+    for (const [key, value] of formData.entries()) {
+        if (key.endsWith('[]')) {
+            const cleanKey = key.slice(0, -2);
+            if (!data[cleanKey]) {
+                data[cleanKey] = [];
+            }
+            data[cleanKey].push(value);
+        } else {
+            data[key] = value;
+        }
+    }
+    
+    try {
+        const response = await fetch('/admin/clients/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('更新成功');
+            window.location.href = '/admin/clients';
+        } else {
+            alert(result.error || '更新失败');
+        }
+    } catch (error) {
+        alert('更新失败，请重试');
+    }
+});
+</script>
+{% endblock %}

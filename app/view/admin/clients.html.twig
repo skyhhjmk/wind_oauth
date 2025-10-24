@@ -1,0 +1,110 @@
+{% extends "layout/admin.html.twig" %}
+
+{% block page_title %}OAuth 客户端管理{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow">
+    <!-- 头部操作栏 -->
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+        <h3 class="text-lg font-semibold text-gray-900">客户端列表</h3>
+        <a href="/admin/clients/create" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">
+            <svg class="inline-block w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            创建新客户端
+        </a>
+    </div>
+
+    <!-- 表格 -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">名称</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">所有者</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">创建时间</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for client in clients %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ client.id }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">{{ client.name }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <code class="text-xs bg-gray-100 px-2 py-1 rounded">{{ client.client_id }}</code>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ client.user ? client.user.username : 'N/A' }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if client.status == 1 %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                启用
+                            </span>
+                        {% else %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                禁用
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ client.created_at|date('Y-m-d H:i') }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <a href="/admin/clients/edit?id={{ client.id }}" class="text-indigo-600 hover:text-indigo-900 mr-3">编辑</a>
+                        <button onclick="deleteClient({{ client.id }})" class="text-red-600 hover:text-red-900">删除</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                        暂无客户端，<a href="/admin/clients/create" class="text-indigo-600 hover:text-indigo-900">创建第一个</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 分页 -->
+    {% if clients.hasPages() %}
+    <div class="px-6 py-4 border-t border-gray-200">
+        {{ clients.links()|raw }}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+async function deleteClient(id) {
+    if (!confirm('确定要删除这个客户端吗？这将删除所有相关的授权码和令牌。')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/admin/clients/delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({ id: id })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || '删除失败');
+        }
+    } catch (error) {
+        alert('删除失败，请重试');
+    }
+}
+</script>
+{% endblock %}

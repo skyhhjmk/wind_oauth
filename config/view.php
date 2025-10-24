@@ -18,5 +18,11 @@ use support\view\Blade;
 use support\view\ThinkPHP;
 
 return [
-    'handler' => Raw::class
+    'handler' => Twig::class,
+    'options' => [
+        'cache' => false,
+        'auto_reload' => true,
+        'strict_variables' => false,
+        'view_suffix' => 'html.twig',
+    ],
 ];

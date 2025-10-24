@@ -2,31 +2,27 @@
 
 namespace app\controller;
 
+use app\model\User;
 use support\Request;
 
 class IndexController
 {
     public function index(Request $request)
     {
-        return <<<EOF
-<style>
-  * {
-    padding: 0;
-    margin: 0;
-  }
-  iframe {
-    border: none;
-    overflow: scroll;
-  }
-</style>
-<iframe
-  src="https://www.workerman.net/wellcome"
-  width="100%"
-  height="100%"
-  allow="clipboard-write"
-  sandbox="allow-scripts allow-same-origin allow-popups"
-></iframe>
-EOF;
+        $userId = session('user_id');
+        $user = null;
+        $isAdmin = false;
+        
+        if ($userId) {
+            $user = User::find($userId);
+            $isAdmin = $user && $user->is_admin;
+        }
+        
+        return view('index', [
+            'user_id' => $userId,
+            'username' => session('username'),
+            'is_admin' => $isAdmin
+        ]);
     }
 
     public function view(Request $request)

@@ -1,0 +1,187 @@
+{% extends "layout/base.html.twig" %}
+
+{% block title %}系统安装 - Wind OAuth{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+    <div class="max-w-2xl w-full">
+        <!-- 安装卡片 -->
+        <div class="bg-white rounded-lg shadow-xl p-8">
+            <!-- 头部 -->
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-indigo-600 mb-2">Wind OAuth 系统安装</h1>
+                <p class="text-gray-600">欢迎使用 Wind OAuth，请配置数据库信息完成安装</p>
+            </div>
+
+            {% if error %}
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>{{ error }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 安装表单 -->
+            <form method="POST" action="/install" class="space-y-6">
+                <!-- 数据库类型 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">数据库类型</label>
+                    <select name="db_type" id="db_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <option value="mysql">MySQL</option>
+                        <option value="sqlite">SQLite</option>
+                        <option value="pgsql">PostgreSQL</option>
+                    </select>
+                </div>
+
+                <!-- MySQL/PostgreSQL 配置 -->
+                <div id="server_config">
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- 数据库主机 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">数据库主机</label>
+                            <input type="text" name="db_host" value="127.0.0.1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="127.0.0.1">
+                        </div>
+
+                        <!-- 端口 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">端口</label>
+                            <input type="text" name="db_port" id="db_port" value="3306" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="3306">
+                        </div>
+                    </div>
+
+                    <!-- 数据库名称 -->
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">数据库名称</label>
+                        <input type="text" name="db_name" value="wind_oauth" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="wind_oauth" required>
+                        <p class="text-xs text-gray-500 mt-1">请确保数据库已创建</p>
+                    </div>
+
+                    <!-- 用户名 -->
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">数据库用户名</label>
+                        <input type="text" name="db_user" value="root" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="root" required>
+                    </div>
+
+                    <!-- 密码 -->
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">数据库密码</label>
+                        <input type="password" name="db_password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="数据库密码">
+                    </div>
+                </div>
+
+                <!-- SQLite 配置 -->
+                <div id="sqlite_config" style="display: none;">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">数据库文件路径</label>
+                        <input type="text" name="db_name" value="runtime/database.sqlite" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="runtime/database.sqlite">
+                        <p class="text-xs text-gray-500 mt-1">相对于项目根目录的路径</p>
+                    </div>
+                </div>
+
+                <!-- 管理员账户配置 -->
+                <div class="border-t border-gray-200 pt-6 mt-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">👤 管理员账户</h3>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- 管理员用户名 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">管理员用户名 <span class="text-red-500">*</span></label>
+                            <input type="text" name="admin_username" value="admin" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="admin" required>
+                        </div>
+
+                        <!-- 管理员邮箱 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">管理员邮箱 <span class="text-red-500">*</span></label>
+                            <input type="email" name="admin_email" value="admin@example.com" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="admin@example.com" required>
+                        </div>
+                    </div>
+
+                    <!-- 管理员密码 -->
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">管理员密码 <span class="text-red-500">*</span></label>
+                        <input type="password" name="admin_password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="至少6个字符" required minlength="6">
+                        <p class="text-xs text-gray-500 mt-1">密码至少需要6个字符</p>
+                    </div>
+
+                    <!-- 确认密码 -->
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">确认密码 <span class="text-red-500">*</span></label>
+                        <input type="password" name="admin_password_confirm" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="再次输入密码" required minlength="6">
+                    </div>
+                </div>
+
+                <!-- 安装说明 -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+                    <h3 class="text-sm font-semibold text-blue-800 mb-2">📝 安装说明</h3>
+                    <ul class="text-sm text-blue-700 space-y-1 list-disc list-inside">
+                        <li>系统将自动创建 .env 配置文件</li>
+                        <li>自动创建所需的数据库表结构</li>
+                        <li>创建默认管理员账户</li>
+                        <li>生成 install.lock 锁定文件防止重复安装</li>
+                        <li>请确保项目根目录具有写入权限</li>
+                    </ul>
+                </div>
+
+                <!-- 提交按钮 -->
+                <div class="flex gap-4">
+                    <button type="submit" class="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                        开始安装
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 版本信息 -->
+        <div class="text-center mt-6 text-gray-500 text-sm">
+            <p>Wind OAuth v1.2.15</p>
+            <p class="mt-1">基于 Webman 框架构建</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 根据数据库类型切换配置表单
+    document.getElementById('db_type').addEventListener('change', function() {
+        const dbType = this.value;
+        const serverConfig = document.getElementById('server_config');
+        const sqliteConfig = document.getElementById('sqlite_config');
+        const portInput = document.getElementById('db_port');
+
+        if (dbType === 'sqlite') {
+            serverConfig.style.display = 'none';
+            sqliteConfig.style.display = 'block';
+        } else {
+            serverConfig.style.display = 'block';
+            sqliteConfig.style.display = 'none';
+            
+            // 根据数据库类型设置默认端口
+            if (dbType === 'mysql') {
+                portInput.value = '3306';
+            } else if (dbType === 'pgsql') {
+                portInput.value = '5432';
+            }
+        }
+    });
+
+    // 表单提交验证
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const password = document.querySelector('input[name="admin_password"]').value;
+        const passwordConfirm = document.querySelector('input[name="admin_password_confirm"]').value;
+
+        if (password !== passwordConfirm) {
+            e.preventDefault();
+            alert('两次密码输入不一致，请重新输入！');
+            return false;
+        }
+
+        if (password.length < 6) {
+            e.preventDefault();
+            alert('密码至少需要6个字符！');
+            return false;
+        }
+    });
+</script>
+{% endblock %}

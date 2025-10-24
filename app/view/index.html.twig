@@ -1,0 +1,467 @@
+{% extends "layout/base.html.twig" %}
+
+{% block title %}Wind OAuth - OAuth 2.0 授权服务{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-indigo-600">Wind OAuth</h1>
+                    <span class="ml-3 text-sm text-gray-500">OAuth 2.0 授权服务</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    {% if user_id %}
+                        <a href="/profile" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+                            个人中心
+                        </a>
+                        {% if is_admin %}
+                        <a href="/admin" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+                            管理后台
+                        </a>
+                        {% endif %}
+                        <a href="/logout" class="bg-gray-200 text-gray-700 hover:bg-gray-300 px-4 py-2 rounded-md text-sm font-medium">
+                            退出
+                        </a>
+                    {% else %}
+                        <a href="/login" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+                            登录
+                        </a>
+                        <a href="/register" class="bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded-md text-sm font-medium">
+                            注册
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <!-- Hero Section -->
+        <div class="text-center mb-16">
+            <h2 class="text-5xl font-extrabold text-gray-900 mb-4">
+                安全的 OAuth 2.0 授权服务
+            </h2>
+            <p class="text-xl text-gray-600 mb-8">
+                为您的应用提供统一的身份认证和授权管理
+            </p>
+            {% if not user_id %}
+            <div class="flex justify-center gap-4">
+                <a href="/register" class="bg-indigo-600 text-white px-8 py-3 rounded-lg text-lg font-medium hover:bg-indigo-700 transition">
+                    立即注册
+                </a>
+                <a href="/login" class="bg-white text-indigo-600 border-2 border-indigo-600 px-8 py-3 rounded-lg text-lg font-medium hover:bg-indigo-50 transition">
+                    登录
+                </a>
+            </div>
+            {% else %}
+            <div class="bg-white rounded-lg shadow-md p-6 max-w-md mx-auto">
+                <p class="text-gray-700 mb-4">欢迎回来，<span class="font-semibold text-indigo-600">{{ username }}</span>！</p>
+                <div class="flex gap-3">
+                    <a href="/profile" class="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-center">
+                        个人中心
+                    </a>
+                    {% if is_admin %}
+                    <a href="/admin" class="flex-1 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 text-center">
+                        管理后台
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 功能特性 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">安全可靠</h3>
+                <p class="text-gray-600">采用OAuth 2.0标准协议，提供企业级的安全保障</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">高性能</h3>
+                <p class="text-gray-600">基于Workerman高性能框架，支持大规模并发访问</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">易于集成</h3>
+                <p class="text-gray-600">标准OAuth 2.0接口，轻松对接各种应用系统</p>
+            </div>
+        </div>
+
+        <!-- OAuth流程说明 -->
+        <div class="bg-white rounded-lg shadow-md p-8 mb-16">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">OAuth 2.0 授权流程</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-indigo-600">1</span>
+                    </div>
+                    <h4 class="font-semibold text-gray-900 mb-2">用户登录</h4>
+                    <p class="text-sm text-gray-600">用户在授权页面登录</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-indigo-600">2</span>
+                    </div>
+                    <h4 class="font-semibold text-gray-900 mb-2">授权确认</h4>
+                    <p class="text-sm text-gray-600">用户确认授予权限</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-indigo-600">3</span>
+                    </div>
+                    <h4 class="font-semibold text-gray-900 mb-2">获取令牌</h4>
+                    <p class="text-sm text-gray-600">应用获得访问令牌</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-indigo-600">4</span>
+                    </div>
+                    <h4 class="font-semibold text-gray-900 mb-2">访问资源</h4>
+                    <p class="text-sm text-gray-600">使用令牌访问用户数据</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- OAuth 工作流程图 -->
+        <div class="bg-white rounded-lg shadow-md p-8 mb-16">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">OAuth 2.0 工作流程图</h3>
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <pre class="text-sm text-gray-700 overflow-x-auto">
+┌──────────┐                                ┌──────────────┐
+│          │                                │              │
+│  用户端  │                                │  客户端应用  │
+│          │                                │              │
+└────┬─────┘                                └──────┬───────┘
+     │                                             │
+     │  1. 点击登录                                 │
+     ├────────────────────────────────────────────>│
+     │                                             │
+     │  2. 跳转到授权服务器                         │
+     │     (带上 client_id, redirect_uri, scope)   │
+     │<────────────────────────────────────────────┤
+     │                                             │
+┌────▼─────────────────────────────────────┐      │
+│                                          │      │
+│         授权服务器 (Wind OAuth)           │      │
+│                                          │      │
+│  3. 用户登录并授权                         │      │
+│  4. 生成授权码 (authorization_code)       │      │
+│  5. 重定向回客户端                         │      │
+│     (带上 code)                           │      │
+└──────────────────────────────────────────┘      │
+     │                                             │
+     │  6. 重定向到 redirect_uri?code=xxx          │
+     ├────────────────────────────────────────────>│
+     │                                             │
+     │                                             │
+     │                          7. 用授权码换取令牌  │
+     │                             POST /token     │
+     │  ┌──────────────────────────────────────────┤
+     │  │  (code, client_id, client_secret)        │
+     │  │                                          │
+     │  │  8. 返回访问令牌                          │
+     │  │     (access_token, refresh_token)        │
+     │  └─────────────────────────────────────────>│
+     │                                             │
+     │                          9. 使用访问令牌     │
+     │                             获取用户信息     │
+     │  ┌──────────────────────────────────────────┤
+     │  │  Authorization: Bearer {access_token}    │
+     │  │                                          │
+     │  │  10. 返回用户数据                         │
+     │  └─────────────────────────────────────────>│
+     │                                             │
+     │  11. 登录成功，显示用户信息                   │
+     │<────────────────────────────────────────────┤
+     │                                             │
+                    </pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- API 对接文档 -->
+        <div class="bg-white rounded-lg shadow-md p-8">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">API 对接文档</h3>
+            
+            <!-- 授权端点 -->
+            <div class="mb-8">
+                <h4 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm mr-3">GET</span>
+                    1. 获取授权码
+                </h4>
+                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <p class="text-sm font-mono text-gray-700 mb-2">端点: <code class="bg-gray-200 px-2 py-1 rounded">/oauth/authorize</code></p>
+                    <p class="text-sm text-gray-600 mb-3">引导用户到此端点进行授权</p>
+                    <div class="text-sm">
+                        <p class="font-semibold text-gray-700 mb-2">请求参数:</p>
+                        <table class="w-full border border-gray-300">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="border border-gray-300 px-3 py-2 text-left">参数</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left">必填</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left">说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="border border-gray-300 px-3 py-2 font-mono text-xs">response_type</td>
+                                    <td class="border border-gray-300 px-3 py-2">是</td>
+                                    <td class="border border-gray-300 px-3 py-2">固定值: <code>code</code></td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 px-3 py-2 font-mono text-xs">client_id</td>
+                                    <td class="border border-gray-300 px-3 py-2">是</td>
+                                    <td class="border border-gray-300 px-3 py-2">客户端ID</td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 px-3 py-2 font-mono text-xs">redirect_uri</td>
+                                    <td class="border border-gray-300 px-3 py-2">是</td>
+                                    <td class="border border-gray-300 px-3 py-2">授权后的回调地址</td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 px-3 py-2 font-mono text-xs">scope</td>
+                                    <td class="border border-gray-300 px-3 py-2">否</td>
+                                    <td class="border border-gray-300 px-3 py-2">请求的权限范围，多个用空格分隔</td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 px-3 py-2 font-mono text-xs">state</td>
+                                    <td class="border border-gray-300 px-3 py-2">推荐</td>
+                                    <td class="border border-gray-300 px-3 py-2">防CSRF攻击的随机字符串</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">示例:</p>
+                        <pre class="bg-gray-800 text-green-400 p-3 rounded text-xs overflow-x-auto">GET /oauth/authorize?response_type=code&client_id=your_client_id&redirect_uri=https://yourapp.com/callback&scope=profile email&state=random_string</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 获取令牌 -->
+            <div class="mb-8">
+                <h4 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm mr-3">POST</span>
+                    2. 获取访问令牌
+                </h4>
+                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <p class="text-sm font-mono text-gray-700 mb-2">端点: <code class="bg-gray-200 px-2 py-1 rounded">/oauth/token</code></p>
+                    <p class="text-sm text-gray-600 mb-3">使用授权码换取访问令牌</p>
+                    <div class="text-sm">
+                        <p class="font-semibold text-gray-700 mb-2">请求参数 (application/x-www-form-urlencoded):</p>
+                        <table class="w-full border border-gray-300">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="border border-gray-300 px-3 py-2 text-left">参数</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left">必填</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left">说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="border border-gray-300 px-3 py-2 font-mono text-xs">grant_type</td>
+                                    <td class="border border-gray-300 px-3 py-2">是</td>
+                                    <td class="border border-gray-300 px-3 py-2">固定值: <code>authorization_code</code></td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 px-3 py-2 font-mono text-xs">code</td>
+                                    <td class="border border-gray-300 px-3 py-2">是</td>
+                                    <td class="border border-gray-300 px-3 py-2">授权码</td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 px-3 py-2 font-mono text-xs">redirect_uri</td>
+                                    <td class="border border-gray-300 px-3 py-2">是</td>
+                                    <td class="border border-gray-300 px-3 py-2">必须与授权时的回调地址一致</td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 px-3 py-2 font-mono text-xs">client_id</td>
+                                    <td class="border border-gray-300 px-3 py-2">是</td>
+                                    <td class="border border-gray-300 px-3 py-2">客户端ID</td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 px-3 py-2 font-mono text-xs">client_secret</td>
+                                    <td class="border border-gray-300 px-3 py-2">是</td>
+                                    <td class="border border-gray-300 px-3 py-2">客户端密钥</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">示例请求:</p>
+                        <pre class="bg-gray-800 text-green-400 p-3 rounded text-xs overflow-x-auto">POST /oauth/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&code=AUTH_CODE&redirect_uri=https://yourapp.com/callback&client_id=your_client_id&client_secret=your_client_secret</pre>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">响应示例:</p>
+                        <pre class="bg-gray-800 text-green-400 p-3 rounded text-xs overflow-x-auto">{
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+  "refresh_token": "def50200a8f9c3d7e...",
+  "token_type": "Bearer",
+  "expires_in": 7200,
+  "scope": "profile email"
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 刷新令牌 -->
+            <div class="mb-8">
+                <h4 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm mr-3">POST</span>
+                    3. 刷新访问令牌
+                </h4>
+                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <p class="text-sm font-mono text-gray-700 mb-2">端点: <code class="bg-gray-200 px-2 py-1 rounded">/oauth/token</code></p>
+                    <p class="text-sm text-gray-600 mb-3">使用刷新令牌获取新的访问令牌</p>
+                    <div class="text-sm">
+                        <p class="font-semibold text-gray-700 mb-2">请求参数:</p>
+                        <table class="w-full border border-gray-300">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="border border-gray-300 px-3 py-2 text-left">参数</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left">必填</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left">说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="border border-gray-300 px-3 py-2 font-mono text-xs">grant_type</td>
+                                    <td class="border border-gray-300 px-3 py-2">是</td>
+                                    <td class="border border-gray-300 px-3 py-2">固定值: <code>refresh_token</code></td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 px-3 py-2 font-mono text-xs">refresh_token</td>
+                                    <td class="border border-gray-300 px-3 py-2">是</td>
+                                    <td class="border border-gray-300 px-3 py-2">刷新令牌</td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 px-3 py-2 font-mono text-xs">client_id</td>
+                                    <td class="border border-gray-300 px-3 py-2">是</td>
+                                    <td class="border border-gray-300 px-3 py-2">客户端ID</td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 px-3 py-2 font-mono text-xs">client_secret</td>
+                                    <td class="border border-gray-300 px-3 py-2">是</td>
+                                    <td class="border border-gray-300 px-3 py-2">客户端密钥</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 获取用户信息 -->
+            <div class="mb-8">
+                <h4 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm mr-3">GET</span>
+                    4. 获取用户信息
+                </h4>
+                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <p class="text-sm font-mono text-gray-700 mb-2">端点: <code class="bg-gray-200 px-2 py-1 rounded">/oauth/userinfo</code></p>
+                    <p class="text-sm text-gray-600 mb-3">使用访问令牌获取用户信息</p>
+                    <div class="text-sm">
+                        <p class="font-semibold text-gray-700 mb-2">请求头:</p>
+                        <pre class="bg-gray-800 text-green-400 p-3 rounded text-xs overflow-x-auto mb-3">Authorization: Bearer {access_token}</pre>
+                        <p class="font-semibold text-gray-700 mb-2">响应示例:</p>
+                        <pre class="bg-gray-800 text-green-400 p-3 rounded text-xs overflow-x-auto">{
+  "user_id": 123,
+  "username": "john_doe",
+  "email": "john@example.com",
+  "name": "John Doe",
+  "scope": ["profile", "email"]
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 撤销令牌 -->
+            <div class="mb-8">
+                <h4 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm mr-3">POST</span>
+                    5. 撤销令牌
+                </h4>
+                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <p class="text-sm font-mono text-gray-700 mb-2">端点: <code class="bg-gray-200 px-2 py-1 rounded">/oauth/revoke</code></p>
+                    <p class="text-sm text-gray-600 mb-3">撤销访问令牌或刷新令牌</p>
+                    <div class="text-sm">
+                        <p class="font-semibold text-gray-700 mb-2">请求参数:</p>
+                        <table class="w-full border border-gray-300">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="border border-gray-300 px-3 py-2 text-left">参数</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left">必填</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-left">说明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="border border-gray-300 px-3 py-2 font-mono text-xs">token</td>
+                                    <td class="border border-gray-300 px-3 py-2">是</td>
+                                    <td class="border border-gray-300 px-3 py-2">要撤销的令牌</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 错误响应 -->
+            <div>
+                <h4 class="text-xl font-semibold text-gray-900 mb-4">错误响应格式</h4>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <p class="text-sm text-gray-600 mb-3">所有错误响应遵循以下格式：</p>
+                    <pre class="bg-gray-800 text-red-400 p-3 rounded text-xs overflow-x-auto mb-3">{
+  "error": "invalid_request",
+  "error_description": "The request is missing a required parameter"
+}</pre>
+                    <div class="text-sm">
+                        <p class="font-semibold text-gray-700 mb-2">常见错误码:</p>
+                        <ul class="list-disc list-inside text-gray-600 space-y-1">
+                            <li><code class="bg-gray-200 px-2 py-1 rounded text-xs">invalid_request</code> - 请求参数错误</li>
+                            <li><code class="bg-gray-200 px-2 py-1 rounded text-xs">invalid_client</code> - 客户端认证失败</li>
+                            <li><code class="bg-gray-200 px-2 py-1 rounded text-xs">invalid_grant</code> - 授权码或刷新令牌无效</li>
+                            <li><code class="bg-gray-200 px-2 py-1 rounded text-xs">unauthorized_client</code> - 客户端无权使用此授权方式</li>
+                            <li><code class="bg-gray-200 px-2 py-1 rounded text-xs">unsupported_grant_type</code> - 不支持的授权类型</li>
+                            <li><code class="bg-gray-200 px-2 py-1 rounded text-xs">access_denied</code> - 用户拒绝授权</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center text-gray-500 text-sm">
+                <p>Wind OAuth v1.0 - 基于 Webman 框架 | OAuth 2.0 标准</p>
+                <p class="mt-2">© 2025 Wind OAuth. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</div>
+{% endblock %}

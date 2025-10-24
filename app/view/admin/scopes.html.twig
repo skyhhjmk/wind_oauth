@@ -1,0 +1,269 @@
+{% extends "layout/admin.html.twig" %}
+
+{% block page_title %}权限范围管理{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow">
+    <!-- 头部操作栏 -->
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+        <div>
+            <h3 class="text-lg font-semibold text-gray-900">OAuth权限范围</h3>
+            <p class="text-sm text-gray-500 mt-1">定义OAuth客户端可申请的权限范围</p>
+        </div>
+        <button onclick="showCreateModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">
+            <svg class="inline-block w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            创建新权限
+        </button>
+    </div>
+
+    <!-- 表格 -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">权限标识</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">描述</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">默认权限</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">创建时间</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for scope in scopes %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ scope.id }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <code class="text-sm font-mono bg-gray-100 px-2 py-1 rounded">{{ scope.scope }}</code>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-900">{{ scope.description }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if scope.is_default %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                是
+                            </span>
+                        {% else %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                否
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ scope.created_at|date('Y-m-d H:i') }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editScope({{ scope.id }}, '{{ scope.scope }}', '{{ scope.description }}', {{ scope.is_default ? 'true' : 'false' }})" 
+                                class="text-indigo-600 hover:text-indigo-900 mr-3">编辑</button>
+                        <button onclick="deleteScope({{ scope.id }})" class="text-red-600 hover:text-red-900">删除</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                        暂无权限范围，<button onclick="showCreateModal()" class="text-indigo-600 hover:text-indigo-900">创建第一个</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 默认权限说明 -->
+<div class="mt-6 bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+    <div class="flex">
+        <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+        </div>
+        <div class="ml-3">
+            <h3 class="text-sm font-medium text-blue-800">关于默认权限</h3>
+            <div class="mt-2 text-sm text-blue-700">
+                <p>标记为"默认权限"的scope会在客户端未指定权限时自动授予。通常用于基础权限如 <code class="bg-blue-100 px-1">basic</code>。</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 创建权限模态框 -->
+<div id="createModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">创建新权限范围</h3>
+            <form id="createForm" onsubmit="return createScope(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">权限标识 *</label>
+                    <input type="text" name="scope" required placeholder="例如: profile, email" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <p class="mt-1 text-xs text-gray-500">使用小写字母和下划线，例如：user_profile</p>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">描述 *</label>
+                    <textarea name="description" required rows="3" placeholder="描述此权限范围的用途"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_default" value="1" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                        <span class="ml-2 text-sm text-gray-700">设为默认权限</span>
+                    </label>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="hideCreateModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
+                        取消
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                        创建
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑权限模态框 -->
+<div id="editModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">编辑权限范围</h3>
+            <form id="editForm" onsubmit="return updateScope(event)">
+                <input type="hidden" name="id" id="edit_id">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">权限标识</label>
+                    <input type="text" id="edit_scope" disabled 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600">
+                    <p class="mt-1 text-xs text-gray-500">权限标识创建后不可修改</p>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">描述 *</label>
+                    <textarea name="description" id="edit_description" required rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_default" id="edit_is_default" value="1" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                        <span class="ml-2 text-sm text-gray-700">设为默认权限</span>
+                    </label>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="hideEditModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
+                        取消
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                        更新
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function showCreateModal() {
+    document.getElementById('createModal').classList.remove('hidden');
+}
+
+function hideCreateModal() {
+    document.getElementById('createModal').classList.add('hidden');
+    document.getElementById('createForm').reset();
+}
+
+function showEditModal() {
+    document.getElementById('editModal').classList.remove('hidden');
+}
+
+function hideEditModal() {
+    document.getElementById('editModal').classList.add('hidden');
+}
+
+async function createScope(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    try {
+        const response = await fetch('/admin/scopes', {
+            method: 'POST',
+            body: new URLSearchParams(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('权限范围创建成功！');
+            location.reload();
+        } else {
+            alert(data.error || '创建失败');
+        }
+    } catch (error) {
+        alert('创建失败，请重试');
+    }
+    
+    return false;
+}
+
+function editScope(id, scope, description, isDefault) {
+    document.getElementById('edit_id').value = id;
+    document.getElementById('edit_scope').value = scope;
+    document.getElementById('edit_description').value = description;
+    document.getElementById('edit_is_default').checked = isDefault;
+    showEditModal();
+}
+
+async function updateScope(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    try {
+        const response = await fetch('/admin/scopes/update', {
+            method: 'POST',
+            body: new URLSearchParams(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('权限范围更新成功！');
+            location.reload();
+        } else {
+            alert(data.error || '更新失败');
+        }
+    } catch (error) {
+        alert('更新失败，请重试');
+    }
+    
+    return false;
+}
+
+async function deleteScope(id) {
+    if (!confirm('确定要删除此权限范围吗？这可能影响现有的OAuth客户端配置。')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/admin/scopes/delete', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({id: id})
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('权限范围删除成功！');
+            location.reload();
+        } else {
+            alert(data.error || '删除失败');
+        }
+    } catch (error) {
+        alert('删除失败，请重试');
+    }
+}
+</script>
+{% endblock %}

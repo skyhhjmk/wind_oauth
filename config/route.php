@@ -13,9 +13,58 @@
  */
 
 use Webman\Route;
+use app\controller\AuthController;
+use app\controller\OauthController;
+use app\controller\AdminController;
+use app\controller\InstallController;
 
+// 安装路由
+Route::get('/install', [InstallController::class, 'index']);
+Route::post('/install', [InstallController::class, 'install']);
 
+// 认证路由
+Route::get('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'loginSubmit']);
+Route::get('/register', [AuthController::class, 'register']);
+Route::post('/register', [AuthController::class, 'registerSubmit']);
+Route::get('/logout', [AuthController::class, 'logout']);
 
+// 个人中心
+Route::get('/profile', [AuthController::class, 'profile']);
+Route::post('/profile/update', [AuthController::class, 'profileUpdate']);
+Route::post('/profile/password', [AuthController::class, 'profilePassword']);
 
+// OAuth 2.0 端点
+Route::get('/oauth/authorize', [OauthController::class, 'authorize']);
+Route::post('/oauth/authorize', [OauthController::class, 'authorizeSubmit']);
+Route::post('/oauth/token', [OauthController::class, 'token']);
+Route::post('/oauth/introspect', [OauthController::class, 'introspect']);
+Route::post('/oauth/revoke', [OauthController::class, 'revoke']);
+Route::get('/oauth/userinfo', [OauthController::class, 'userinfo']);
 
+// 管理后台
+Route::get('/admin', [AdminController::class, 'index']);
 
+// 客户端管理
+Route::get('/admin/clients', [AdminController::class, 'clients']);
+Route::get('/admin/clients/create', [AdminController::class, 'createClient']);
+Route::post('/admin/clients', [AdminController::class, 'storeClient']);
+Route::get('/admin/clients/edit', [AdminController::class, 'editClient']);
+Route::post('/admin/clients/update', [AdminController::class, 'updateClient']);
+Route::post('/admin/clients/delete', [AdminController::class, 'deleteClient']);
+
+// 令牌管理
+Route::get('/admin/tokens', [AdminController::class, 'tokens']);
+Route::post('/admin/tokens/revoke', [AdminController::class, 'revokeTokenAdmin']);
+
+// 权限范围管理
+Route::get('/admin/scopes', [AdminController::class, 'scopes']);
+Route::post('/admin/scopes', [AdminController::class, 'storeScope']);
+Route::post('/admin/scopes/update', [AdminController::class, 'updateScope']);
+Route::post('/admin/scopes/delete', [AdminController::class, 'deleteScope']);
+
+// 用户管理
+Route::get('/admin/users', [AdminController::class, 'users']);
+Route::post('/admin/users', [AdminController::class, 'storeUser']);
+Route::post('/admin/users/update', [AdminController::class, 'updateUser']);
+Route::post('/admin/users/delete', [AdminController::class, 'deleteUser']);

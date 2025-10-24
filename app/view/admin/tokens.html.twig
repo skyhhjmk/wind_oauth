@@ -1,0 +1,194 @@
+{% extends "layout/admin.html.twig" %}
+
+{% block page_title %}令牌管理{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow">
+    <!-- 头部操作栏 -->
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">访问令牌列表</h3>
+        <p class="text-sm text-gray-500 mt-1">管理所有OAuth访问令牌和刷新令牌</p>
+    </div>
+
+    <!-- 表格 -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">用户</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">客户端</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">访问令牌</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">权限范围</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">过期时间</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for token in tokens %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ token.id }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">
+                            {{ token.user ? token.user.username : 'N/A' }}
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            {{ token.user ? token.user.email : '' }}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">
+                            {{ token.client ? token.client.name : 'N/A' }}
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            {{ token.client_id }}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <code class="text-xs bg-gray-100 px-2 py-1 rounded block max-w-xs truncate">
+                            {{ token.access_token }}
+                        </code>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex flex-wrap gap-1">
+                            {% if token.scope %}
+                                {% for scope in token.scope %}
+                                    <span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">{{ scope }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-xs text-gray-400">无</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div>{{ token.expires_at|date('Y-m-d H:i') }}</div>
+                        <div class="text-xs text-gray-400">
+                            刷新: {{ token.refresh_expires_at|date('Y-m-d H:i') }}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% set now = date() %}
+                        {% if token.expires_at > now %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                有效
+                            </span>
+                        {% else %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                已过期
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="revokeToken({{ token.id }})" class="text-red-600 hover:text-red-900">撤销</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="px-6 py-8 text-center text-gray-500">
+                        暂无令牌记录
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 分页 -->
+    {% if tokens.hasPages() %}
+    <div class="px-6 py-4 border-t border-gray-200">
+        {{ tokens.links()|raw }}
+    </div>
+    {% endif %}
+</div>
+
+<!-- 统计信息 -->
+<div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0 bg-green-100 rounded-full p-3">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-500">有效令牌</p>
+                <p class="text-2xl font-semibold text-gray-900">
+                    {% set valid_count = 0 %}
+                    {% set now = date() %}
+                    {% for token in tokens %}
+                        {% if token.expires_at > now %}
+                            {% set valid_count = valid_count + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                    {{ valid_count }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0 bg-yellow-100 rounded-full p-3">
+                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-500">总令牌数</p>
+                <p class="text-2xl font-semibold text-gray-900">{{ tokens.total() }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center">
+            <div class="flex-shrink-0 bg-red-100 rounded-full p-3">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-sm font-medium text-gray-500">已过期</p>
+                <p class="text-2xl font-semibold text-gray-900">
+                    {% set expired_count = 0 %}
+                    {% set now = date() %}
+                    {% for token in tokens %}
+                        {% if token.expires_at <= now %}
+                            {% set expired_count = expired_count + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                    {{ expired_count }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function revokeToken(id) {
+    if (!confirm('确定要撤销此令牌吗？撤销后将无法恢复。')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/admin/tokens/revoke', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({id: id})
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('令牌已撤销！');
+            location.reload();
+        } else {
+            alert(data.error || '撤销失败');
+        }
+    } catch (error) {
+        alert('撤销失败，请重试');
+    }
+}
+</script>
+{% endblock %}

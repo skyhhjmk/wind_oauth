@@ -1,0 +1,157 @@
+{% extends "layout/base.html.twig" %}
+
+{% block title %}注册账号 - Wind OAuth{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div>
+            <h2 class="mt-6 text-center text-4xl font-extrabold text-gray-900">
+                创建账号
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                已有账号？
+                <a href="/login" class="font-medium text-indigo-600 hover:text-indigo-500">
+                    立即登录
+                </a>
+            </p>
+        </div>
+        <div class="bg-white shadow-2xl rounded-lg p-8">
+            <form class="mt-8 space-y-6" id="registerForm">
+                <div class="space-y-4">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+                            用户名 *
+                        </label>
+                        <input id="username" name="username" type="text" required 
+                               class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                               placeholder="请输入用户名">
+                        <p class="mt-1 text-xs text-gray-500">3-20个字符，只能包含字母、数字和下划线</p>
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                            邮箱地址 *
+                        </label>
+                        <input id="email" name="email" type="email" required
+                               class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                               placeholder="your@email.com">
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                            密码 *
+                        </label>
+                        <input id="password" name="password" type="password" required
+                               class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                               placeholder="请输入密码">
+                        <p class="mt-1 text-xs text-gray-500">至少6个字符</p>
+                    </div>
+                    <div>
+                        <label for="password_confirm" class="block text-sm font-medium text-gray-700 mb-2">
+                            确认密码 *
+                        </label>
+                        <input id="password_confirm" name="password_confirm" type="password" required
+                               class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                               placeholder="请再次输入密码">
+                    </div>
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                            姓名（可选）
+                        </label>
+                        <input id="name" name="name" type="text"
+                               class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                               placeholder="您的真实姓名">
+                    </div>
+                </div>
+
+                <div id="error-message" class="hidden text-red-600 text-sm text-center"></div>
+                <div id="success-message" class="hidden text-green-600 text-sm text-center"></div>
+
+                <div>
+                    <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
+                        注册
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="text-center text-sm text-gray-600">
+            <p>注册即表示您同意我们的服务条款和隐私政策</p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('username').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const passwordConfirm = document.getElementById('password_confirm').value;
+    const name = document.getElementById('name').value;
+    const errorMsg = document.getElementById('error-message');
+    const successMsg = document.getElementById('success-message');
+    
+    // 隐藏之前的消息
+    errorMsg.classList.add('hidden');
+    successMsg.classList.add('hidden');
+    
+    // 客户端验证
+    if (password !== passwordConfirm) {
+        errorMsg.textContent = '两次输入的密码不一致';
+        errorMsg.classList.remove('hidden');
+        return;
+    }
+    
+    if (password.length < 6) {
+        errorMsg.textContent = '密码至少需要6个字符';
+        errorMsg.classList.remove('hidden');
+        return;
+    }
+    
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+        errorMsg.textContent = '用户名格式不正确';
+        errorMsg.classList.remove('hidden');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                username: username,
+                email: email,
+                password: password,
+                name: name
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            if (data.redirect) {
+                successMsg.textContent = '注册成功！正在跳转...';
+                successMsg.classList.remove('hidden');
+                setTimeout(() => {
+                    window.location.href = data.redirect;
+                }, 1000);
+            } else {
+                successMsg.textContent = '注册成功！即将跳转到登录页面...';
+                successMsg.classList.remove('hidden');
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 2000);
+            }
+        } else if (data.error) {
+            errorMsg.textContent = data.error;
+            errorMsg.classList.remove('hidden');
+        }
+    } catch (error) {
+        errorMsg.textContent = '注册失败，请重试';
+        errorMsg.classList.remove('hidden');
+    }
+});
+</script>
+{% endblock %}

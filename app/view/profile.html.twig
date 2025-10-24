@@ -1,0 +1,229 @@
+{% extends "layout/base.html.twig" %}
+
+{% block title %}个人中心 - Wind OAuth{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gray-50">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="text-2xl font-bold text-indigo-600">Wind OAuth</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+                        首页
+                    </a>
+                    {% if is_admin %}
+                    <a href="/admin" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">
+                        管理后台
+                    </a>
+                    {% endif %}
+                    <a href="/logout" class="bg-gray-200 text-gray-700 hover:bg-gray-300 px-4 py-2 rounded-md text-sm font-medium">
+                        退出
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">个人中心</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- 个人信息卡片 -->
+            <div class="md:col-span-2 bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">个人信息</h2>
+                <form id="profileForm">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">用户名</label>
+                            <input type="text" value="{{ user.username }}" disabled
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600">
+                            <p class="mt-1 text-xs text-gray-500">用户名不可修改</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">邮箱地址</label>
+                            <input type="email" name="email" id="email" value="{{ user.email }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">姓名</label>
+                            <input type="text" name="name" id="name" value="{{ user.name }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div class="pt-4">
+                            <button type="submit" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                                保存修改
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 账户统计 -->
+            <div class="space-y-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">账户信息</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">账户状态</span>
+                            {% if user.status == 1 %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">正常</span>
+                            {% else %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">禁用</span>
+                            {% endif %}
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">账户类型</span>
+                            {% if user.is_admin %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">管理员</span>
+                            {% else %}
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">普通用户</span>
+                            {% endif %}
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">注册时间</span>
+                            <span class="text-sm text-gray-900">{{ user.created_at|date('Y-m-d') }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">修改密码</h3>
+                    <button onclick="showPasswordModal()" class="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300">
+                        更改密码
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 修改密码模态框 -->
+<div id="passwordModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">修改密码</h3>
+            <form id="passwordForm">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">当前密码</label>
+                        <input type="password" name="old_password" id="old_password" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">新密码</label>
+                        <input type="password" name="new_password" id="new_password" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <p class="mt-1 text-xs text-gray-500">至少6个字符</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">确认新密码</label>
+                        <input type="password" name="new_password_confirm" id="new_password_confirm" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+                <div id="password-error" class="hidden mt-4 text-red-600 text-sm text-center"></div>
+                <div class="flex gap-3 mt-6">
+                    <button type="button" onclick="hidePasswordModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
+                        取消
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                        确认修改
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// 更新个人信息
+document.getElementById('profileForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('email').value;
+    const name = document.getElementById('name').value;
+    
+    try {
+        const response = await fetch('/profile/update', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({email, name})
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('个人信息更新成功！');
+            location.reload();
+        } else {
+            alert(data.error || '更新失败');
+        }
+    } catch (error) {
+        alert('更新失败，请重试');
+    }
+});
+
+// 修改密码
+function showPasswordModal() {
+    document.getElementById('passwordModal').classList.remove('hidden');
+}
+
+function hidePasswordModal() {
+    document.getElementById('passwordModal').classList.add('hidden');
+    document.getElementById('passwordForm').reset();
+    document.getElementById('password-error').classList.add('hidden');
+}
+
+document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const oldPassword = document.getElementById('old_password').value;
+    const newPassword = document.getElementById('new_password').value;
+    const newPasswordConfirm = document.getElementById('new_password_confirm').value;
+    const errorMsg = document.getElementById('password-error');
+    
+    errorMsg.classList.add('hidden');
+    
+    if (newPassword !== newPasswordConfirm) {
+        errorMsg.textContent = '两次输入的新密码不一致';
+        errorMsg.classList.remove('hidden');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        errorMsg.textContent = '新密码至少需要6个字符';
+        errorMsg.classList.remove('hidden');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/profile/password', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({
+                old_password: oldPassword,
+                new_password: newPassword
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('密码修改成功！请重新登录');
+            window.location.href = '/logout';
+        } else {
+            errorMsg.textContent = data.error || '修改失败';
+            errorMsg.classList.remove('hidden');
+        }
+    } catch (error) {
+        errorMsg.textContent = '修改失败，请重试';
+        errorMsg.classList.remove('hidden');
+    }
+});
+</script>
+{% endblock %}
