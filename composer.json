@@ -1,0 +1,56 @@
+{
+  "name": "skyhhjmk/wind_oauth",
+  "type": "project",
+  "keywords": [
+    "windblog",
+    "blog system",
+    "webman application",
+    "high performance"
+  ],
+  "homepage": "https://www.biliwind.com",
+  "license": "BSD 3-Clause License",
+  "description": "A high-performance blog system based on Webman framework.",
+  "authors": [
+    {
+      "name": "skyhhjmk",
+      "email": "admin@biliwind.com",
+      "homepage": "https://www.biliwind.com",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "email": "admin@biliwind.com",
+    "issues": "https://github.com/skyhhjmk/windblog/issues",
+    "source": "https://github.com/skyhhjmk/windblog"
+  },
+  "version": "1.2.15",
+  "require": {
+    "php": ">=8.3",
+    "workerman/webman-framework": "^2.1",
+    "monolog/monolog": "^2.0"
+  },
+  "suggest": {
+    "ext-event": "For better performance. "
+  },
+  "autoload": {
+    "psr-4": {
+      "": "./",
+      "app\\": "./app",
+      "App\\": "./app",
+      "app\\View\\Components\\": "./app/view/components"
+    }
+  },
+  "scripts": {
+    "post-package-install": [
+      "support\\Plugin::install"
+    ],
+    "post-package-update": [
+      "support\\Plugin::install"
+    ],
+    "pre-package-uninstall": [
+      "support\\Plugin::uninstall"
+    ]
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
