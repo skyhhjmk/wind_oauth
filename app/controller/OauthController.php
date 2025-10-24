@@ -44,10 +44,17 @@ class OauthController
 
         // 检查用户是否已登录
         $userId = session('user_id');
+        file_put_contents(runtime_path() . '/debug.log', date('Y-m-d H:i:s') . ' [DEBUG] authorize() - user_id: ' . ($userId ?: 'null') . "\n", FILE_APPEND);
+        
         if (!$userId) {
-            // 跳转到登录页面
-            session('oauth_request', $request->get());
-            return redirect('/login');
+            // 跳转到登录页面，使用cookie保存OAuth请求参数
+            $oauthData = json_encode($request->get());
+            file_put_contents(runtime_path() . '/debug.log', date('Y-m-d H:i:s') . ' [DEBUG] authorize() - Setting cookie with data: ' . $oauthData . "\n", FILE_APPEND);
+            
+            $response = redirect('/login');
+            // 设置cookie：600秒有效期，路径为/
+            $response->cookie('oauth_request', $oauthData, time() + 600, '/', '', false, true);
+            return $response;
         }
 
         $user = User::find($userId);

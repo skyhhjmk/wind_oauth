@@ -135,6 +135,10 @@ document.getElementById('registerForm').addEventListener('submit', async functio
                 successMsg.textContent = '注册成功！正在跳转...';
                 successMsg.classList.remove('hidden');
                 setTimeout(() => {
+                    // 如果需要清除cookie
+                    if (data.clear_cookie) {
+                        document.cookie = data.clear_cookie + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+                    }
                     window.location.href = data.redirect;
                 }, 1000);
             } else {

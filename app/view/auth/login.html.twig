@@ -80,6 +80,10 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         const data = await response.json();
         
         if (data.redirect) {
+            // 如果需要清除cookie
+            if (data.clear_cookie) {
+                document.cookie = data.clear_cookie + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+            }
             window.location.href = data.redirect;
         } else if (data.error) {
             errorMsg.textContent = data.error;

@@ -12,10 +12,31 @@ class AuthController
      */
     public function login(Request $request): Response
     {
-        if (session('user_id')) {
+        $userId = session('user_id');
+        $oauthCookie = $request->cookie('oauth_request');
+        
+        file_put_contents(runtime_path() . '/debug.log', date('Y-m-d H:i:s') . ' [DEBUG] login() - user_id: ' . ($userId ?: 'null') . "\n", FILE_APPEND);
+        file_put_contents(runtime_path() . '/debug.log', date('Y-m-d H:i:s') . ' [DEBUG] login() - oauth_request cookie exists: ' . ($oauthCookie ? 'yes' : 'no') . "\n", FILE_APPEND);
+        
+        if ($userId) {
+            // 如果有OAuth授权请求，重定向回授权页面
+            if ($oauthCookie) {
+                file_put_contents(runtime_path() . '/debug.log', date('Y-m-d H:i:s') . ' [DEBUG] login() - Redirecting to OAuth authorize with cookie data' . "\n", FILE_APPEND);
+                // URL解码cookie值
+                $oauthRequest = json_decode(urldecode($oauthCookie), true);
+                if ($oauthRequest && is_array($oauthRequest)) {
+                    $queryString = http_build_query($oauthRequest);
+                    $response = redirect('/oauth/authorize?' . $queryString);
+                    // 使用正确的方式清除cookie：设置过期时间为过去
+                    $response->cookie('oauth_request', '', time() - 3600, '/');
+                    return $response;
+                }
+            }
+            file_put_contents(runtime_path() . '/debug.log', date('Y-m-d H:i:s') . ' [DEBUG] login() - No OAuth request, redirecting to profile' . "\n", FILE_APPEND);
             return redirect('/profile');
         }
 
+        file_put_contents(runtime_path() . '/debug.log', date('Y-m-d H:i:s') . ' [DEBUG] login() - Not logged in, showing login form' . "\n", FILE_APPEND);
         return view('auth/login');
     }
 
@@ -44,13 +65,24 @@ class AuthController
         }
 
         // 设置session
-        session(['user_id' => $user->id, 'username' => $user->username]);
+        $request->session()->set('user_id', $user->id);
+        $request->session()->set('username', $user->username);
+        
+        file_put_contents(runtime_path() . '/debug.log', date('Y-m-d H:i:s') . ' [DEBUG] loginSubmit() - Set session - user_id: ' . $user->id . "\n", FILE_APPEND);
+        file_put_contents(runtime_path() . '/debug.log', date('Y-m-d H:i:s') . ' [DEBUG] loginSubmit() - Verify session - user_id: ' . session('user_id') . "\n", FILE_APPEND);
+        file_put_contents(runtime_path() . '/debug.log', date('Y-m-d H:i:s') . ' [DEBUG] loginSubmit() - oauth_request cookie: ' . ($request->cookie('oauth_request') ?: 'null') . "\n", FILE_APPEND);
 
         // 如果有OAuth授权请求，重定向回授权页面
-        if ($oauthRequest = session('oauth_request')) {
-            session(['oauth_request' => null]);
-            $queryString = http_build_query($oauthRequest);
-            return json(['redirect' => '/oauth/authorize?' . $queryString]);
+        if ($oauthRequestJson = $request->cookie('oauth_request')) {
+            // URL解码cookie值
+            $oauthRequest = json_decode(urldecode($oauthRequestJson), true);
+            if ($oauthRequest && is_array($oauthRequest)) {
+                $queryString = http_build_query($oauthRequest);
+                return json([
+                    'redirect' => '/oauth/authorize?' . $queryString,
+                    'clear_cookie' => 'oauth_request'
+                ]);
+            }
         }
 
         return json(['redirect' => '/profile']);
@@ -122,13 +154,21 @@ class AuthController
             ]);
 
             // 自动登录
-            session(['user_id' => $user->id, 'username' => $user->username]);
+            $request->session()->set('user_id', $user->id);
+            $request->session()->set('username', $user->username);
 
-            // 如果有OAuth授权请求，重定向回授权页面
-            if ($oauthRequest = session('oauth_request')) {
-                session(['oauth_request' => null]);
-                $queryString = http_build_query($oauthRequest);
-                return json(['success' => true, 'redirect' => '/oauth/authorize?' . $queryString]);
+            // 如果有OAuth授权请求，重定向回授权页靈
+            if ($oauthRequestJson = $request->cookie('oauth_request')) {
+                // URL解码cookie值
+                $oauthRequest = json_decode(urldecode($oauthRequestJson), true);
+                if ($oauthRequest && is_array($oauthRequest)) {
+                    $queryString = http_build_query($oauthRequest);
+                    return json([
+                        'success' => true,
+                        'redirect' => '/oauth/authorize?' . $queryString,
+                        'clear_cookie' => 'oauth_request'
+                    ]);
+                }
             }
 
             return json(['success' => true, 'redirect' => '/profile']);

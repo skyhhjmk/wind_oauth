@@ -65,6 +65,7 @@ Route::post('/admin/scopes/delete', [AdminController::class, 'deleteScope']);
 
 // 用户管理
 Route::get('/admin/users', [AdminController::class, 'users']);
+Route::get('/admin/users/{id}', [AdminController::class, 'getUser']);
 Route::post('/admin/users', [AdminController::class, 'storeUser']);
 Route::post('/admin/users/update', [AdminController::class, 'updateUser']);
 Route::post('/admin/users/delete', [AdminController::class, 'deleteUser']);

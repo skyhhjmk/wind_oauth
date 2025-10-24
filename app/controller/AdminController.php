@@ -310,6 +310,24 @@ class AdminController
     }
 
     /**
+     * 获取单个用户信息
+     */
+    public function getUser(Request $request, $id): Response
+    {
+        if ($error = $this->checkAdmin($request)) {
+            return $error;
+        }
+
+        $user = User::find($id);
+
+        if (!$user) {
+            return json(['error' => '用户不存在'], 404);
+        }
+
+        return json(['success' => true, 'data' => $user]);
+    }
+
+    /**
      * 创建用户
      */
     public function storeUser(Request $request): Response
@@ -350,9 +368,10 @@ class AdminController
 
         $data = $request->post();
         $updateData = [
+            'username' => $data['username'] ?? $user->username,
             'email' => $data['email'] ?? $user->email,
             'name' => $data['name'] ?? $user->name,
-            'is_admin' => $data['is_admin'] ?? $user->is_admin,
+            'is_admin' => isset($data['is_admin']) ? ($data['is_admin'] ? 1 : 0) : $user->is_admin,
             'status' => $data['status'] ?? $user->status,
         ];
 
