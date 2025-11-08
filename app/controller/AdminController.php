@@ -97,16 +97,34 @@ class AdminController
         $data = $request->post();
         $credentials = $this->oauthService->generateClientCredentials();
 
-        $client = OAuthClient::create([
-            'user_id' => session('user_id'),
-            'name' => $data['name'],
-            'client_id' => $credentials['client_id'],
-            'client_secret' => password_hash($credentials['client_secret'], PASSWORD_DEFAULT),
-            'redirect_uri' => $data['redirect_uri'],
-            'grant_types' => $data['grant_types'] ?? ['authorization_code'],
-            'scope' => $data['scope'] ?? [],
-            'status' => 1,
-        ]);
+        // 解析白名单（textarea 按行）
+        $whitelist = [];
+        if (!empty($data['redirect_whitelist'])) {
+            $lines = preg_split('/\r?\n/', (string)$data['redirect_whitelist']);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if ($line !== '') {
+                    $whitelist[] = $line;
+                }
+            }
+        }
+
+        try {
+            $client = OAuthClient::create([
+                'user_id' => session('user_id'),
+                'name' => $data['name'],
+                'client_id' => $credentials['client_id'],
+                'client_secret' => password_hash($credentials['client_secret'], PASSWORD_DEFAULT),
+                'redirect_uri' => $data['redirect_uri'],
+                'redirect_dynamic_enabled' => !empty($data['redirect_dynamic_enabled']) ? 1 : 0,
+                'redirect_whitelist' => $whitelist,
+                'grant_types' => $data['grant_types'] ?? ['authorization_code'],
+                'scope' => $data['scope'] ?? [],
+                'status' => 1,
+            ]);
+        } catch (\Throwable $e) {
+            return json(['error' => '保存失败：' . $e->getMessage() . '（请确认数据库已添加新字段）'], 500);
+        }
 
         return json([
             'success' => true,
@@ -152,13 +170,39 @@ class AdminController
         }
 
         $data = $request->post();
-        $client->update([
+
+        // 解析白名单（textarea 按行）
+        $whitelist = null;
+        if (array_key_exists('redirect_whitelist', $data)) {
+            $whitelist = [];
+            $lines = preg_split('/\r?\n/', (string)$data['redirect_whitelist']);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if ($line !== '') {
+                    $whitelist[] = $line;
+                }
+            }
+        }
+
+        $payload = [
             'name' => $data['name'] ?? $client->name,
             'redirect_uri' => $data['redirect_uri'] ?? $client->redirect_uri,
             'grant_types' => $data['grant_types'] ?? $client->grant_types,
             'scope' => $data['scope'] ?? $client->scope,
             'status' => $data['status'] ?? $client->status,
-        ]);
+        ];
+        if (array_key_exists('redirect_dynamic_enabled', $data)) {
+            $payload['redirect_dynamic_enabled'] = !empty($data['redirect_dynamic_enabled']) ? 1 : 0;
+        }
+        if ($whitelist !== null) {
+            $payload['redirect_whitelist'] = $whitelist;
+        }
+
+        try {
+            $client->update($payload);
+        } catch (\Throwable $e) {
+            return json(['error' => '更新失败：' . $e->getMessage() . '（请确认数据库已添加新字段）'], 500);
+        }
 
         return json(['success' => true, 'client' => $client]);
     }

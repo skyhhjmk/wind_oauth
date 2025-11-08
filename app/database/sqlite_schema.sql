@@ -24,6 +24,8 @@ CREATE TABLE IF NOT EXISTS oauth_clients (
     client_id TEXT NOT NULL UNIQUE,
     client_secret TEXT NOT NULL,
     redirect_uri TEXT NOT NULL,
+    redirect_dynamic_enabled INTEGER NOT NULL DEFAULT 0,
+    redirect_whitelist TEXT,
     grant_types TEXT,
     scope TEXT,
     status INTEGER NOT NULL DEFAULT 1,
