@@ -22,7 +22,7 @@ function init_sqlite_database($dbPath) {
     }
     
     // 读取并执行SQL脚本
-    $sqlFile = base_path() . '/support/database/sqlite_schema.sql';
+    $sqlFile = base_path() . '/app/database/sqlite_schema.sql';
     if (file_exists($sqlFile)) {
         $sql = file_get_contents($sqlFile);
         $pdo->exec($sql);

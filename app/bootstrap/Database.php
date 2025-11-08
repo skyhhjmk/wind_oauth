@@ -1,5 +1,5 @@
 <?php
-namespace support\bootstrap;
+namespace app\bootstrap;
 
 use Illuminate\Database\Capsule\Manager as Capsule;
 use Illuminate\Events\Dispatcher;
@@ -62,7 +62,7 @@ class Database implements Bootstrap
             }
             
             // 读取并执行SQL脚本
-            $sqlFile = base_path() . '/support/database/sqlite_schema.sql';
+            $sqlFile = base_path() . '/app/database/sqlite_schema.sql';
             if (file_exists($sqlFile)) {
                 $sql = file_get_contents($sqlFile);
                 $pdo->exec($sql);

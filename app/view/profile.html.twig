@@ -55,7 +55,7 @@
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         <div class="pt-4">
-                            <button type="submit" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                            <button type="submit" data-loading-text="保存中..." class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
                                 保存修改
                             </button>
                         </div>
@@ -131,7 +131,7 @@
                     <button type="button" onclick="hidePasswordModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
                         取消
                     </button>
-                    <button type="submit" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                    <button type="submit" data-loading-text="修改中..." class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
                         确认修改
                     </button>
                 </div>
@@ -144,28 +144,29 @@
 // 更新个人信息
 document.getElementById('profileForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
+    const submitBtn = this.querySelector('button[type="submit"]');
     const email = document.getElementById('email').value;
     const name = document.getElementById('name').value;
-    
-    try {
-        const response = await fetch('/profile/update', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: new URLSearchParams({email, name})
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            alert('个人信息更新成功！');
-            location.reload();
-        } else {
-            alert(data.error || '更新失败');
+
+    await withButtonLoading(submitBtn, async () => {
+        try {
+            const response = await fetch('/profile/update', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: new URLSearchParams({email, name})
+            });
+            const data = await response.json();
+            if (data.success) {
+                showToast('个人信息更新成功！');
+                setTimeout(() => location.reload(), 600);
+            } else {
+                showToast(data.error || '更新失败', 'error');
+            }
+        } catch (error) {
+            showToast('更新失败，请重试', 'error');
         }
-    } catch (error) {
-        alert('更新失败，请重试');
-    }
+    }, submitBtn?.dataset.loadingText || '处理中...');
 });
 
 // 修改密码
@@ -181,49 +182,50 @@ function hidePasswordModal() {
 
 document.getElementById('passwordForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
+    const submitBtn = this.querySelector('button[type="submit"]');
     const oldPassword = document.getElementById('old_password').value;
     const newPassword = document.getElementById('new_password').value;
     const newPasswordConfirm = document.getElementById('new_password_confirm').value;
     const errorMsg = document.getElementById('password-error');
-    
+
     errorMsg.classList.add('hidden');
-    
+
     if (newPassword !== newPasswordConfirm) {
         errorMsg.textContent = '两次输入的新密码不一致';
         errorMsg.classList.remove('hidden');
         return;
     }
-    
+
     if (newPassword.length < 6) {
         errorMsg.textContent = '新密码至少需要6个字符';
         errorMsg.classList.remove('hidden');
         return;
     }
-    
-    try {
-        const response = await fetch('/profile/password', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: new URLSearchParams({
-                old_password: oldPassword,
-                new_password: newPassword
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            alert('密码修改成功！请重新登录');
-            window.location.href = '/logout';
-        } else {
-            errorMsg.textContent = data.error || '修改失败';
+
+    await withButtonLoading(submitBtn, async () => {
+        try {
+            const response = await fetch('/profile/password', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: new URLSearchParams({
+                    old_password: oldPassword,
+                    new_password: newPassword
+                })
+            });
+            const data = await response.json();
+            if (data.success) {
+                showToast('密码修改成功！请重新登录');
+                setTimeout(() => { window.location.href = '/logout'; }, 600);
+            } else {
+                errorMsg.textContent = data.error || '修改失败';
+                errorMsg.classList.remove('hidden');
+            }
+        } catch (error) {
+            errorMsg.textContent = '修改失败，请重试';
             errorMsg.classList.remove('hidden');
         }
-    } catch (error) {
-        errorMsg.textContent = '修改失败，请重试';
-        errorMsg.classList.remove('hidden');
-    }
+    }, submitBtn?.dataset.loadingText || '处理中...');
 });
 </script>
 {% endblock %}

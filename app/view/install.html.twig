@@ -127,7 +127,7 @@
 
                 <!-- 提交按钮 -->
                 <div class="flex gap-4">
-                    <button type="submit" class="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <button type="submit" data-loading-text="安装中..." class="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         开始安装
                     </button>
                 </div>
@@ -170,17 +170,22 @@
     document.querySelector('form').addEventListener('submit', function(e) {
         const password = document.querySelector('input[name="admin_password"]').value;
         const passwordConfirm = document.querySelector('input[name="admin_password_confirm"]').value;
+        const btn = this.querySelector('button[type="submit"]');
 
         if (password !== passwordConfirm) {
             e.preventDefault();
-            alert('两次密码输入不一致，请重新输入！');
+            showToast('两次密码输入不一致，请重新输入！', 'error');
             return false;
         }
 
         if (password.length < 6) {
             e.preventDefault();
-            alert('密码至少需要6个字符！');
+            showToast('密码至少需要6个字符！', 'error');
             return false;
+        }
+
+        if (btn && window.setButtonLoading) {
+            setButtonLoading(btn, btn.dataset.loadingText || '安装中...');
         }
     });
 </script>

@@ -14,5 +14,5 @@
 
 return [
     support\bootstrap\Session::class,
-    support\bootstrap\Database::class,
+    app\bootstrap\Database::class,
 ];
