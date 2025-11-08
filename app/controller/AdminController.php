@@ -101,7 +101,7 @@ class AdminController
             'user_id' => session('user_id'),
             'name' => $data['name'],
             'client_id' => $credentials['client_id'],
-            'client_secret' => $credentials['client_secret'],
+            'client_secret' => password_hash($credentials['client_secret'], PASSWORD_DEFAULT),
             'redirect_uri' => $data['redirect_uri'],
             'grant_types' => $data['grant_types'] ?? ['authorization_code'],
             'scope' => $data['scope'] ?? [],

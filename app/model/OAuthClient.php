@@ -58,7 +58,19 @@ class OAuthClient extends Model
      */
     public function validateSecret(string $secret): bool
     {
-        return hash_equals($this->client_secret, $secret);
+        $stored = $this->client_secret;
+        // If stored secret is hashed (bcrypt/argon), verify accordingly
+        if (is_string($stored) && preg_match('/^\$[A-Za-z0-9]+\$/', $stored)) {
+            return password_verify($secret, $stored);
+        }
+        // Fallback: plaintext compare (legacy), then upgrade to hash
+        $ok = hash_equals((string)$stored, (string)$secret);
+        if ($ok) {
+            $this->client_secret = password_hash($secret, PASSWORD_DEFAULT);
+            // Best-effort upgrade; ignore errors
+            try { $this->save(); } catch (\Throwable $e) {}
+        }
+        return $ok;
     }
 
     /**

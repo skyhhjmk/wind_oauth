@@ -139,3 +139,11 @@ INSERT OR IGNORE INTO oauth_scopes (scope, description, is_default, created_at, 
 -- 插入默认管理员用户 (密码: admin123)
 INSERT OR IGNORE INTO users (username, email, password, name, is_admin, status, created_at, updated_at) VALUES
 ('admin', 'admin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Administrator', 1, 1, datetime('now'), datetime('now'));
+
+-- 插入示例OAuth提供商（GitHub）
+INSERT OR IGNORE INTO oauth_providers (name, slug, client_id, client_secret, authorize_url, token_url, userinfo_url, scope, icon_class, button_color, status, sort_order) VALUES
+('GitHub', 'github', 'YOUR_GITHUB_CLIENT_ID', 'YOUR_GITHUB_CLIENT_SECRET', 'https://github.com/login/oauth/authorize', 'https://github.com/login/oauth/access_token', 'https://api.github.com/user', 'user:email', 'fa fa-github', '#24292e', 0, 1);
+
+-- 插入示例OAuth提供商（Google）
+INSERT OR IGNORE INTO oauth_providers (name, slug, client_id, client_secret, authorize_url, token_url, userinfo_url, scope, icon_class, button_color, status, sort_order) VALUES
+('Google', 'google', 'YOUR_GOOGLE_CLIENT_ID', 'YOUR_GOOGLE_CLIENT_SECRET', 'https://accounts.google.com/o/oauth2/v2/auth', 'https://oauth2.googleapis.com/token', 'https://www.googleapis.com/oauth2/v2/userinfo', 'openid email profile', 'fa fa-google', '#DB4437', 0, 2);

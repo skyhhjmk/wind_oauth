@@ -58,7 +58,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button onclick="editScope({{ scope.id }}, '{{ scope.scope }}', '{{ scope.description }}', {{ scope.is_default ? 'true' : 'false' }})" 
                                 class="text-indigo-600 hover:text-indigo-900 mr-3">编辑</button>
-                        <button onclick="deleteScope({{ scope.id }})" class="text-red-600 hover:text-red-900">删除</button>
+                        <button onclick="deleteScope({{ scope.id }}, this)" data-loading-text="删除中..." class="text-red-600 hover:text-red-900">删除</button>
                     </td>
                 </tr>
                 {% else %}
@@ -117,7 +117,7 @@
                     <button type="button" onclick="hideCreateModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
                         取消
                     </button>
-                    <button type="submit" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                    <button type="submit" data-loading-text="创建中..." class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
                         创建
                     </button>
                 </div>
@@ -154,7 +154,7 @@
                     <button type="button" onclick="hideEditModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
                         取消
                     </button>
-                    <button type="submit" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                    <button type="submit" data-loading-text="更新中..." class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
                         更新
                     </button>
                 </div>
@@ -185,25 +185,26 @@ async function createScope(event) {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
-    
-    try {
-        const response = await fetch('/admin/scopes', {
-            method: 'POST',
-            body: new URLSearchParams(formData)
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            alert('权限范围创建成功！');
-            location.reload();
-        } else {
-            alert(data.error || '创建失败');
+    const btn = form.querySelector('button[type="submit"]');
+
+    await withButtonLoading(btn, async () => {
+        try {
+            const response = await fetch('/admin/scopes', {
+                method: 'POST',
+                body: new URLSearchParams(formData)
+            });
+            const data = await response.json();
+            if (data.success) {
+                showToast('权限范围创建成功！');
+                setTimeout(() => location.reload(), 600);
+            } else {
+                showToast(data.error || '创建失败', 'error');
+            }
+        } catch (error) {
+            showToast('创建失败，请重试', 'error');
         }
-    } catch (error) {
-        alert('创建失败，请重试');
-    }
-    
+    }, btn?.dataset.loadingText || '处理中...');
+
     return false;
 }
 
@@ -219,51 +220,51 @@ async function updateScope(event) {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
-    
-    try {
-        const response = await fetch('/admin/scopes/update', {
-            method: 'POST',
-            body: new URLSearchParams(formData)
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            alert('权限范围更新成功！');
-            location.reload();
-        } else {
-            alert(data.error || '更新失败');
+    const btn = form.querySelector('button[type="submit"]');
+
+    await withButtonLoading(btn, async () => {
+        try {
+            const response = await fetch('/admin/scopes/update', {
+                method: 'POST',
+                body: new URLSearchParams(formData)
+            });
+            const data = await response.json();
+            if (data.success) {
+                showToast('权限范围更新成功！');
+                setTimeout(() => location.reload(), 600);
+            } else {
+                showToast(data.error || '更新失败', 'error');
+            }
+        } catch (error) {
+            showToast('更新失败，请重试', 'error');
         }
-    } catch (error) {
-        alert('更新失败，请重试');
-    }
-    
+    }, btn?.dataset.loadingText || '处理中...');
+
     return false;
 }
 
-async function deleteScope(id) {
-    if (!confirm('确定要删除此权限范围吗？这可能影响现有的OAuth客户端配置。')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch('/admin/scopes/delete', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: new URLSearchParams({id: id})
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            alert('权限范围删除成功！');
-            location.reload();
-        } else {
-            alert(data.error || '删除失败');
+async function deleteScope(id, btn) {
+    const ok = await confirmAction('确定要删除此权限范围吗？这可能影响现有的OAuth客户端配置。');
+    if (!ok) return;
+
+    await withButtonLoading(btn, async () => {
+        try {
+            const response = await fetch('/admin/scopes/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ id })
+            });
+            const data = await response.json();
+            if (data.success) {
+                showToast('权限范围删除成功！');
+                setTimeout(() => location.reload(), 600);
+            } else {
+                showToast(data.error || '删除失败', 'error');
+            }
+        } catch (error) {
+            showToast('删除失败，请重试', 'error');
         }
-    } catch (error) {
-        alert('删除失败，请重试');
-    }
+    }, btn?.dataset.loadingText || '处理中...');
 }
 </script>
 {% endblock %}

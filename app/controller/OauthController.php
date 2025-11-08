@@ -4,6 +4,7 @@ namespace app\controller;
 use app\model\OAuthClient;
 use app\model\OAuthScope;
 use app\model\User;
+use app\model\OAuthToken;
 use app\service\OAuthService;
 use support\Request;
 use support\Response;
@@ -15,6 +16,31 @@ class OauthController
     public function __construct()
     {
         $this->oauthService = new OAuthService();
+    }
+
+    private function authenticateClient(Request $request): ?OAuthClient
+    {
+        $auth = $request->header('authorization');
+        $clientId = null; $clientSecret = null;
+        if ($auth && str_starts_with($auth, 'Basic ')) {
+            $decoded = base64_decode(substr($auth, 6));
+            if ($decoded !== false) {
+                $parts = explode(':', $decoded, 2);
+                $clientId = $parts[0] ?? null;
+                $clientSecret = $parts[1] ?? null;
+            }
+        } else {
+            $clientId = $request->post('client_id');
+            $clientSecret = $request->post('client_secret');
+        }
+        if (!$clientId || !$clientSecret) {
+            return null;
+        }
+        $client = OAuthClient::where('client_id', $clientId)->where('status', 1)->first();
+        if (!$client || !$client->validateSecret($clientSecret)) {
+            return null;
+        }
+        return $client;
     }
 
     /**
@@ -169,24 +195,25 @@ class OauthController
      */
     public function introspect(Request $request): Response
     {
-        $token = $request->post('token');
-        
-        if (!$token) {
+        $client = $this->authenticateClient($request);
+        if (!$client) {
+            return json(['error' => 'invalid_client'], 401);
+        }
+        $tokenValue = $request->post('token');
+        if (!$tokenValue) {
             return json(['active' => false]);
         }
-
-        $tokenInfo = $this->oauthService->validateAccessToken($token);
-
-        if (!$tokenInfo) {
+        $token = OAuthToken::where('access_token', $tokenValue)->first();
+        if (!$token || $token->client_id !== $client->client_id || $token->isExpired()) {
             return json(['active' => false]);
         }
-
+        $scopes = implode(' ', $token->scope ?? []);
         return json([
             'active' => true,
-            'user_id' => $tokenInfo['user_id'],
-            'username' => $tokenInfo['username'],
-            'email' => $tokenInfo['email'],
-            'scope' => implode(' ', $tokenInfo['scope'] ?? []),
+            'scope' => $scopes,
+            'client_id' => $token->client_id,
+            'exp' => strtotime($token->expires_at),
+            'sub' => (string)$token->user_id,
         ]);
     }
 
@@ -195,14 +222,20 @@ class OauthController
      */
     public function revoke(Request $request): Response
     {
-        $token = $request->post('token');
-        
-        if (!$token) {
+        $client = $this->authenticateClient($request);
+        if (!$client) {
+            return json(['error' => 'invalid_client'], 401);
+        }
+        $tokenValue = $request->post('token');
+        if (!$tokenValue) {
             return json(['error' => 'invalid_request'], 400);
         }
-
-        $this->oauthService->revokeToken($token);
-
+        $token = OAuthToken::where('access_token', $tokenValue)
+            ->orWhere('refresh_token', $tokenValue)
+            ->first();
+        if ($token && $token->client_id === $client->client_id) {
+            $token->delete();
+        }
         return json(['success' => true]);
     }
 

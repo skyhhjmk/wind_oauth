@@ -98,7 +98,24 @@ class AuthController
      */
     public function logout(Request $request): Response
     {
-        session(['user_id' => null, 'username' => null]);
+        // CSRF mitigation: require same-origin for POST
+        $origin = $request->header('origin');
+        $referer = $request->header('referer');
+        $host = $request->host();
+        if ($origin) {
+            $oHost = parse_url($origin, PHP_URL_HOST);
+            if ($oHost && $oHost !== $host) {
+                return response('Forbidden', 403);
+            }
+        }
+        if ($referer) {
+            $rHost = parse_url($referer, PHP_URL_HOST);
+            if ($rHost && $rHost !== $host) {
+                return response('Forbidden', 403);
+            }
+        }
+        $request->session()->set('user_id', null);
+        $request->session()->set('username', null);
         return redirect('/login');
     }
 

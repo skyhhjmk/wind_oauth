@@ -71,7 +71,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <a href="/admin/providers/edit?id={{ provider.id }}" 
                                    class="text-indigo-600 hover:text-indigo-900 mr-3">编辑</a>
-                                <button onclick="deleteProvider({{ provider.id }})" 
+                                <button onclick="deleteProvider({{ provider.id }}, this)" data-loading-text="删除中..."
                                         class="text-red-600 hover:text-red-900">删除</button>
                             </td>
                         </tr>
@@ -96,30 +96,28 @@
 </div>
 
 <script>
-async function deleteProvider(id) {
-    if (!confirm('确定要删除此OAuth提供商吗？这将同时删除所有用户绑定。')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch('/admin/providers/delete', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({ id })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            location.reload();
-        } else {
-            alert(data.error || '删除失败');
+async function deleteProvider(id, btn) {
+    const ok = await confirmAction('确定要删除此OAuth提供商吗？这将同时删除所有用户绑定。');
+    if (!ok) return;
+
+    await withButtonLoading(btn, async () => {
+        try {
+            const response = await fetch('/admin/providers/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ id })
+            });
+            const data = await response.json();
+            if (data.success) {
+                showToast('删除成功');
+                setTimeout(() => location.reload(), 600);
+            } else {
+                showToast(data.error || '删除失败', 'error');
+            }
+        } catch (error) {
+            showToast('删除失败', 'error');
         }
-    } catch (error) {
-        alert('删除失败');
-    }
+    }, btn?.dataset.loadingText || '处理中...');
 }
 </script>
 {% endblock %}

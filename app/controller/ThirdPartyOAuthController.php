@@ -25,8 +25,9 @@ class ThirdPartyOAuthController
         session('oauth_state', $state);
         session('oauth_provider_id', $oauthProvider->id);
 
-        // 构建回调URL
-        $redirectUri = $request->url() . '://' . $request->host() . '/oauth/callback/' . $provider;
+        // 构建回调URL（支持反向代理）
+        $scheme = $this->detectScheme($request);
+        $redirectUri = $scheme . '://' . $request->host() . '/oauth/callback/' . $provider;
         
         // 构建授权URL并重定向
         $authorizeUrl = $oauthProvider->buildAuthorizeUrl($redirectUri, $state);
@@ -66,7 +67,8 @@ class ThirdPartyOAuthController
 
         try {
             // 交换授权码获取访问令牌
-            $redirectUri = $request->url() . '://' . $request->host() . '/oauth/callback/' . $provider;
+            $scheme = $this->detectScheme($request);
+            $redirectUri = $scheme . '://' . $request->host() . '/oauth/callback/' . $provider;
             $tokenData = $this->exchangeCodeForToken($oauthProvider, $code, $redirectUri);
 
             if (!$tokenData) {
@@ -292,5 +294,22 @@ class ThirdPartyOAuthController
         ]);
 
         return $user;
+    }
+
+    private function detectScheme(Request $request): string
+    {
+        $xfp = strtolower((string)$request->header('x-forwarded-proto'));
+        if ($xfp === 'https') {
+            return 'https';
+        }
+        $xfs = strtolower((string)$request->header('x-forwarded-ssl'));
+        if ($xfs === 'on') {
+            return 'https';
+        }
+        $feh = strtolower((string)$request->header('front-end-https'));
+        if ($feh === 'on' || $feh === 'true') {
+            return 'https';
+        }
+        return 'http';
     }
 }

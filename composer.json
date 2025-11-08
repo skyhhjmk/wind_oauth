@@ -57,6 +57,6 @@
       "support\\Plugin::uninstall"
     ]
   },
-  "minimum-stability": "dev",
+  "minimum-stability": "stable",
   "prefer-stable": true
 }

@@ -80,7 +80,7 @@
                         {% endif %}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button onclick="revokeToken({{ token.id }})" class="text-red-600 hover:text-red-900">撤销</button>
+                        <button onclick="revokeToken({{ token.id }}, this)" data-loading-text="撤销中..." class="text-red-600 hover:text-red-900">撤销</button>
                     </td>
                 </tr>
                 {% else %}
@@ -166,29 +166,28 @@
 </div>
 
 <script>
-async function revokeToken(id) {
-    if (!confirm('确定要撤销此令牌吗？撤销后将无法恢复。')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch('/admin/tokens/revoke', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: new URLSearchParams({id: id})
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            alert('令牌已撤销！');
-            location.reload();
-        } else {
-            alert(data.error || '撤销失败');
+async function revokeToken(id, btn) {
+    const ok = await confirmAction('确定要撤销此令牌吗？撤销后将无法恢复。');
+    if (!ok) return;
+
+    await withButtonLoading(btn, async () => {
+        try {
+            const response = await fetch('/admin/tokens/revoke', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ id })
+            });
+            const data = await response.json();
+            if (data.success) {
+                showToast('令牌已撤销！');
+                setTimeout(() => location.reload(), 600);
+            } else {
+                showToast(data.error || '撤销失败', 'error');
+            }
+        } catch (error) {
+            showToast('撤销失败，请重试', 'error');
         }
-    } catch (error) {
-        alert('撤销失败，请重试');
-    }
+    }, btn?.dataset.loadingText || '处理中...');
 }
 </script>
 {% endblock %}

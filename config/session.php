@@ -42,7 +42,7 @@ return [
         ]
     ],
 
-    'session_name' => 'PHPSID',
+    'session_name' => 'WINDSESSID',
     
     'auto_update_timestamp' => false,
 
@@ -52,13 +52,13 @@ return [
 
     'cookie_path' => '/',
 
-    'domain' => '',
+    'domain' => getenv('COOKIE_DOMAIN') ?: '',
     
     'http_only' => true,
 
-    'secure' => false,
+    'secure' => filter_var(getenv('COOKIE_SECURE') ?: true, FILTER_VALIDATE_BOOLEAN),
     
-    'same_site' => '',
+    'same_site' => getenv('COOKIE_SAMESITE') ?: 'Lax',
 
     'gc_probability' => [1, 1000],
 

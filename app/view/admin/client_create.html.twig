@@ -72,7 +72,7 @@
             <a href="/admin/clients" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition">
                 取消
             </a>
-            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">
+            <button type="submit" data-loading-text="创建中..." class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition">
                 创建客户端
             </button>
         </div>
@@ -122,49 +122,46 @@
 <script>
 document.getElementById('createClientForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
+    const submitBtn = e.target.querySelector('button[type="submit"]');
     const formData = new FormData(e.target);
     const data = {};
-    
+
     for (const [key, value] of formData.entries()) {
         if (key.endsWith('[]')) {
             const cleanKey = key.slice(0, -2);
-            if (!data[cleanKey]) {
-                data[cleanKey] = [];
-            }
+            if (!data[cleanKey]) data[cleanKey] = [];
             data[cleanKey].push(value);
         } else {
             data[key] = value;
         }
     }
-    
-    try {
-        const response = await fetch('/admin/clients', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            document.getElementById('clientId').textContent = result.credentials.client_id;
-            document.getElementById('clientSecret').textContent = result.credentials.client_secret;
-            document.getElementById('successModal').classList.remove('hidden');
-        } else {
-            alert(result.error || '创建失败');
+
+    await withButtonLoading(submitBtn, async () => {
+        try {
+            const response = await fetch('/admin/clients', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (result.success) {
+                document.getElementById('clientId').textContent = result.credentials.client_id;
+                document.getElementById('clientSecret').textContent = result.credentials.client_secret;
+                document.getElementById('successModal').classList.remove('hidden');
+            } else {
+                showToast(result.error || '创建失败', 'error');
+            }
+        } catch (error) {
+            showToast('创建失败，请重试', 'error');
         }
-    } catch (error) {
-        alert('创建失败，请重试');
-    }
+    }, submitBtn?.dataset.loadingText || '处理中...');
 });
 
 function copyToClipboard(elementId) {
     const text = document.getElementById(elementId).textContent;
     navigator.clipboard.writeText(text).then(() => {
-        alert('已复制到剪贴板');
+        showToast('已复制到剪贴板');
     });
 }
 </script>

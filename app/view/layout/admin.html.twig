@@ -72,3 +72,87 @@
     </main>
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+// 全局轻提示（Toast）
+window.showToast = function(message, type = 'success') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'fixed top-4 right-4 z-50 space-y-2';
+        document.body.appendChild(container);
+    }
+
+    const base = 'flex items-center px-4 py-2 rounded shadow text-sm transition-opacity duration-300';
+    const color = type === 'success' 
+        ? 'bg-green-600 text-white' 
+        : type === 'warning' 
+            ? 'bg-yellow-600 text-white' 
+            : 'bg-red-600 text-white';
+
+    const el = document.createElement('div');
+    el.className = base + ' ' + color;
+    el.innerText = message;
+    container.appendChild(el);
+
+    setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 300);
+    }, 2200);
+};
+
+// 按钮加载态封装
+window.withButtonLoading = async function(button, task, loadingText = '处理中...') {
+    if (!button) return task();
+    const originalDisabled = button.disabled;
+    const originalHTML = button.innerHTML;
+    const originalClasses = button.className;
+
+    const spinner = '<svg class="animate-spin h-4 w-4 inline-block mr-2 text-white" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>';
+
+    try {
+        button.disabled = true;
+        button.className = originalClasses + ' opacity-60 cursor-not-allowed';
+        const text = button.dataset.loadingText || button.dataset.loading_text || loadingText;
+        button.innerHTML = spinner + (text || '处理中...');
+        return await task();
+    } finally {
+        button.disabled = originalDisabled;
+        button.className = originalClasses;
+        button.innerHTML = originalHTML;
+    }
+};
+
+// 自定义确认弹窗（替代 window.confirm）
+window.confirmAction = function(message) {
+    return new Promise((resolve) => {
+        // 遮罩
+        const overlay = document.createElement('div');
+        overlay.className = 'fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center';
+
+        // 弹窗
+        const modal = document.createElement('div');
+        modal.className = 'bg-white rounded-lg shadow-xl p-6 w-80';
+        modal.innerHTML = `
+            <div class="text-gray-900 text-base">${message}</div>
+            <div class="mt-6 flex justify-end gap-3">
+                <button id="confirm-cancel" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">取消</button>
+                <button id="confirm-ok" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">确认</button>
+            </div>
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        const cleanup = () => overlay.remove();
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) { cleanup(); resolve(false); }
+        });
+        modal.querySelector('#confirm-cancel').addEventListener('click', () => { cleanup(); resolve(false); });
+        modal.querySelector('#confirm-ok').addEventListener('click', () => { cleanup(); resolve(true); });
+    });
+};
+</script>
+{% endblock %}

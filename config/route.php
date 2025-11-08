@@ -28,7 +28,7 @@ Route::get('/login', [AuthController::class, 'login']);
 Route::post('/login', [AuthController::class, 'loginSubmit']);
 Route::get('/register', [AuthController::class, 'register']);
 Route::post('/register', [AuthController::class, 'registerSubmit']);
-Route::get('/logout', [AuthController::class, 'logout']);
+Route::post('/logout', [AuthController::class, 'logout']);
 
 // 个人中心
 Route::get('/profile', [AuthController::class, 'profile']);
